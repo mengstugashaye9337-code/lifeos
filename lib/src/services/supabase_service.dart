@@ -1,16 +1,24 @@
-// Supabase service for backend integration
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseService {
-  static final SupabaseClient client = Supabase.instance.client;
+  static SupabaseClient get client => Supabase.instance.client;
 
-  // Initialize Supabase
   static Future<void> initialize() async {
-    await Supabase.initialize(
-      url: 'YOUR_SUPABASE_URL',
-      anonKey: 'YOUR_SUPABASE_ANON_KEY',
-    );
-  }
+    final url = dotenv.env['SUPABASE_URL'];
+    final anonKey = dotenv.env['SUPABASE_ANON_KEY'];
 
-  // Add methods for authentication, data sync, etc.
+    if (url == null || url.isEmpty || anonKey == null || anonKey.isEmpty) {
+      throw Exception(
+        'Missing Supabase config in .env file. '
+        'Make sure SUPABASE_URL and SUPABASE_ANON_KEY are set.',
+      );
+    }
+
+    try {
+      await Supabase.initialize(url: url, anonKey: anonKey);
+    } catch (e) {
+      throw Exception('Failed to initialize Supabase: $e');
+    }
+  }
 }

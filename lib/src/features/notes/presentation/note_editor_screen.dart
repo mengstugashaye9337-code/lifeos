@@ -1,3 +1,4 @@
+// lib/src/features/notes/presentation/note_editor_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -5,7 +6,7 @@ import 'package:lifeos/src/database/app_database.dart';
 import 'package:lifeos/src/features/notes/application/note_provider.dart';
 
 class NoteEditorScreen extends ConsumerStatefulWidget {
-  final Note? note; // If null, we are creating a new note
+  final Note? note;
   const NoteEditorScreen({super.key, this.note});
 
   @override
@@ -13,8 +14,8 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
 }
 
 class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
-  late TextEditingController _titleController;
-  late TextEditingController _contentController;
+  late final TextEditingController _titleController;
+  late final TextEditingController _contentController;
   bool _isPreviewMode = false;
 
   @override
@@ -26,22 +27,23 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     );
   }
 
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _contentController.dispose();
+    super.dispose();
+  }
+
   void _saveNote() {
-    final repository = ref.read(noteRepositoryProvider);
+    final title = _titleController.text.trim();
+    final content = _contentController.text.trim();
+    if (title.isEmpty) return;
+
+    final repo = ref.read(noteRepositoryProvider);
     if (widget.note == null) {
-      repository.addNote(
-        NotesCompanion.insert(
-          title: _titleController.text,
-          content: _contentController.text,
-        ),
-      );
+      repo.addNote(NotesCompanion.insert(title: title, content: content));
     } else {
-      repository.updateNote(
-        widget.note!.copyWith(
-          title: _titleController.text,
-          content: _contentController.text,
-        ),
-      );
+      repo.updateNote(widget.note!.copyWith(title: title, content: content));
     }
     Navigator.pop(context);
   }
@@ -60,7 +62,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: _isPreviewMode
             ? Markdown(data: _contentController.text)
             : Column(
@@ -78,6 +80,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                     child: TextField(
                       controller: _contentController,
                       maxLines: null,
+                      expands: true,
                       decoration: const InputDecoration(
                         hintText: 'Start writing (Markdown supported)...',
                         border: InputBorder.none,

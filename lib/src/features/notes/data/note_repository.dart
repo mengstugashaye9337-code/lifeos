@@ -1,3 +1,4 @@
+// lib/src/features/notes/data/note_repository.dart
 import 'package:lifeos/src/database/app_database.dart';
 
 class NoteRepository {
@@ -5,23 +6,12 @@ class NoteRepository {
 
   NoteRepository(this._db);
 
-  // Stream all notes (Real-time updates for the Grid View)
-  Stream<List<Note>> watchNotes() {
-    return _db.select(_db.notes).watch();
-  }
+  Stream<List<Note>> watchNotes() => _db.select(_db.notes).watch();
 
-  // Add a new note
-  Future<int> addNote(NotesCompanion note) {
-    return _db.into(_db.notes).insert(note);
-  }
+  Future<int> addNote(NotesCompanion note) => _db.into(_db.notes).insert(note);
 
-  // Update an existing note (Essential for the Editor auto-save)
-  Future<bool> updateNote(Note note) {
-    return _db.update(_db.notes).replace(note);
-  }
+  Future<bool> updateNote(Note note) => _db.update(_db.notes).replace(note);
 
-  // Delete a note
-  Future<int> deleteNote(int id) {
-    return (_db.delete(_db.notes)..where((t) => t.id.equals(id))).go();
-  }
+  Future<int> deleteNote(int id) =>
+      (_db.delete(_db.notes)..where((t) => t.id.equals(id))).go();
 }
