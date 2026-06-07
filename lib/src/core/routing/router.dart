@@ -1,22 +1,25 @@
-// lib/src/core/router.dart
+// lib/src/core/routing/router.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lifeos/src/features/tasks/presentation/task_screen.dart';
+import 'package:lifeos/src/features/habits/presentation/habit_screen.dart';
+import 'package:lifeos/src/features/notes/presentation/note_list_screen.dart';
 
 // ---------------------------------------------------------------------------
-// Route name constants — use these everywhere instead of raw strings
+// Route name constants
 // ---------------------------------------------------------------------------
+
 abstract class AppRoutes {
   static const home = '/';
   static const tasks = '/tasks';
-  // Uncomment as you complete each feature:
-  // static const notes   = '/notes';
-  // static const habits  = '/habits';
+  static const habits = '/habits';
+  static const notes = '/notes';
 }
 
 // ---------------------------------------------------------------------------
-// Home shell — navigation hub shown at launch
+// Home shell
 // ---------------------------------------------------------------------------
+
 class _HomePage extends StatelessWidget {
   const _HomePage();
 
@@ -33,14 +36,27 @@ class _HomePage extends StatelessWidget {
             subtitle: 'Manage your to-dos',
             onTap: () => context.push(AppRoutes.tasks),
           ),
-          // Add tiles here as you complete each feature:
-          // _FeatureTile(title: 'Notes', onTap: () => context.push(AppRoutes.notes)),
-          // _FeatureTile(title: 'Habits', onTap: () => context.push(AppRoutes.habits)),
+          _FeatureTile(
+            icon: Icons.loop_rounded,
+            title: 'Habits',
+            subtitle: 'Build streaks, track consistency',
+            onTap: () => context.push(AppRoutes.habits),
+          ),
+          _FeatureTile(
+            icon: Icons.notes_outlined,
+            title: 'Notes',
+            subtitle: 'Capture your thoughts',
+            onTap: () => context.push(AppRoutes.notes),
+          ),
         ],
       ),
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// Feature tile
+// ---------------------------------------------------------------------------
 
 class _FeatureTile extends StatelessWidget {
   final IconData icon;
@@ -73,19 +89,13 @@ class _FeatureTile extends StatelessWidget {
 // ---------------------------------------------------------------------------
 // Router
 // ---------------------------------------------------------------------------
+
 final goRouter = GoRouter(
   initialLocation: AppRoutes.home,
   routes: [
-    GoRoute(
-      path: AppRoutes.home,
-      builder: (context, state) => const _HomePage(),
-    ),
-    GoRoute(
-      path: AppRoutes.tasks,
-      builder: (context, state) => const TaskScreen(),
-    ),
-    // Add routes here as you complete each feature:
-    // GoRoute(path: AppRoutes.notes,  builder: (_, __) => const NoteListScreen()),
-    // GoRoute(path: AppRoutes.habits, builder: (_, __) => const HabitScreen()),
+    GoRoute(path: AppRoutes.home, builder: (_, __) => const _HomePage()),
+    GoRoute(path: AppRoutes.tasks, builder: (_, __) => const TaskScreen()),
+    GoRoute(path: AppRoutes.habits, builder: (_, __) => const HabitScreen()),
+    GoRoute(path: AppRoutes.notes, builder: (_, __) => const NoteListScreen()),
   ],
 );

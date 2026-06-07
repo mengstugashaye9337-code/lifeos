@@ -1,12 +1,11 @@
-// lib/src/features/notes/presentation/note_editor_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:lifeos/src/database/app_database.dart';
 import 'package:lifeos/src/features/notes/application/note_provider.dart';
+import 'package:lifeos/src/features/notes/domain/note_model.dart';
 
 class NoteEditorScreen extends ConsumerStatefulWidget {
-  final Note? note;
+  final NoteModel? note; // ← NoteModel, not raw Note row
   const NoteEditorScreen({super.key, this.note});
 
   @override
@@ -17,6 +16,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   late final TextEditingController _titleController;
   late final TextEditingController _contentController;
   bool _isPreviewMode = false;
+
+  bool get _isEditing => widget.note != null;
 
   @override
   void initState() {
@@ -34,31 +35,64 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     super.dispose();
   }
 
-  void _saveNote() {
+  void _save() {
     final title = _titleController.text.trim();
     final content = _contentController.text.trim();
     if (title.isEmpty) return;
 
-    final repo = ref.read(noteRepositoryProvider);
-    if (widget.note == null) {
-      repo.addNote(NotesCompanion.insert(title: title, content: content));
+    final notifier = ref.read(noteProvider.notifier); // ← NoteNotifier
+
+    if (_isEditing) {
+      notifier.updateNote(
+        widget.note!.copyWith(title: title, content: content),
+      );
     } else {
-      repo.updateNote(widget.note!.copyWith(title: title, content: content));
+      notifier.addNote(
+        NoteModel(
+          id: 0,
+          title: title,
+          content: content,
+          createdAt: DateTime.now(),
+          isSynced: false,
+        ),
+      );
     }
+
     Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
+    // Listen for mutation errors
+    ref.listen<AsyncValue<void>>(noteProvider, (_, next) {
+      if (next.hasError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save note: ${next.error}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.note == null ? 'New Note' : 'Edit Note'),
+        title: Text(_isEditing ? 'Edit Note' : 'New Note'),
         actions: [
           IconButton(
-            icon: Icon(_isPreviewMode ? Icons.edit : Icons.remove_red_eye),
+            icon: Icon(
+              _isPreviewMode
+                  ? Icons.edit_outlined
+                  : Icons.remove_red_eye_outlined,
+            ),
+            tooltip: _isPreviewMode ? 'Edit' : 'Preview',
             onPressed: () => setState(() => _isPreviewMode = !_isPreviewMode),
           ),
-          IconButton(icon: const Icon(Icons.check), onPressed: _saveNote),
+          IconButton(
+            icon: const Icon(Icons.check),
+            tooltip: 'Save',
+            onPressed: _save,
+          ),
         ],
       ),
       body: Padding(

@@ -37,21 +37,34 @@ class Habits extends Table {
   IntColumn get streak => integer().withDefault(const Constant(0))();
   BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  // ── Added v3 Column for Domain Model Alignment ──
+  DateTimeColumn get lastCompletedDate => dateTime().nullable()();
+}
+
+// ── Added v3 Table for Completion Log History Tracking ──
+class HabitCompletions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get habitId =>
+      integer().references(Habits, #id, onDelete: KeyAction.cascade)();
+  DateTimeColumn get completedAt =>
+      dateTime().withDefault(currentDateAndTime)();
 }
 
 // ---------------------------------------------------------------------------
 // Database
 // ---------------------------------------------------------------------------
 
-@DriftDatabase(tables: [Tasks, Notes, Habits])
+// ✅ Registered the new HabitCompletions table here
+@DriftDatabase(tables: [Tasks, Notes, Habits, HabitCompletions])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   // Expose a named constructor for tests so tests can pass an in-memory DB.
   AppDatabase.forTesting(super.e);
 
+  // ✅ Bumped schema version to 3
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -63,6 +76,11 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(notes, notes.isSynced);
         await m.addColumn(habits, habits.isSynced);
         await m.addColumn(habits, habits.createdAt);
+      }
+      // ── Safe isolated migration sequence for version 3 ──
+      if (from < 3) {
+        await m.addColumn(habits, habits.lastCompletedDate);
+        await m.createTable(habitCompletions);
       }
     },
   );
