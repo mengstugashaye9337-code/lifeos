@@ -9,7 +9,7 @@ import 'package:lifeos/src/features/habits/domain/habit_model.dart';
 
 abstract interface class IHabitRepository {
   Stream<List<HabitModel>> watchHabits();
-  Future<void> addHabit(HabitModel habit);
+  Future<int> addHabit(HabitModel habit);
   Future<void> updateHabit(HabitModel habit);
   Future<void> deleteHabit(int id);
   Future<void> markComplete(HabitModel habit);
@@ -38,7 +38,7 @@ class HabitRepository implements IHabitRepository {
   // ── Write ────────────────────────────────────────────────────────────────
 
   @override
-  Future<void> addHabit(HabitModel habit) =>
+  Future<int> addHabit(HabitModel habit) =>
       _db.into(_db.habits).insert(HabitMapper.toInsertCompanion(habit));
 
   @override
