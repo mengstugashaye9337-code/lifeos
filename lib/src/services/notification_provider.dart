@@ -2,17 +2,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-//import 'package:android_intent_plus/android_intent_plus.dart';
-import 'package:android_intent_plus/android_intent.dart';
 import 'package:lifeos/src/services/notification_service.dart';
 
 part 'notification_provider.g.dart';
 
 // ---------------------------------------------------------------------------
 // NotificationService provider — singleton, keepAlive
-//
-// keepAlive: true because NotificationService holds the plugin instance.
-// Auto-disposing it would tear down the plugin between navigations.
 // ---------------------------------------------------------------------------
 
 @Riverpod(keepAlive: true)
@@ -22,9 +17,6 @@ NotificationService notificationService(Ref ref) {
 
 // ---------------------------------------------------------------------------
 // Notification ID zones — single source of truth
-//
-// Every feature derives its notification ID from these ranges.
-// Range: 0–999 (Tasks), 1000–1999 (Habits), 9000+ (Summaries).
 // ---------------------------------------------------------------------------
 
 abstract class NotificationIds {
@@ -57,7 +49,6 @@ abstract class NotificationIds {
 class NotificationNotifier extends _$NotificationNotifier {
   @override
   FutureOr<void> build() async {
-    // Initialize on first access
     await ref.read(notificationServiceProvider).initialize();
   }
 
@@ -69,11 +60,14 @@ class NotificationNotifier extends _$NotificationNotifier {
     return _service.requestPermissions();
   }
 
+  Future<void> cancelNotificationById(int id) async {
+    await _service.cancelNotification(id);
+  }
+
   /// Android 12+ requires a separate exact alarms permission.
   Future<bool> canScheduleExactAlarms() async {
     if (!defaultTargetPlatform.isAndroid) return true;
 
-    // Corrected the missing '<' bracket here
     final plugin = FlutterLocalNotificationsPlugin()
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
@@ -82,15 +76,17 @@ class NotificationNotifier extends _$NotificationNotifier {
     return await plugin?.canScheduleExactNotifications() ?? false;
   }
 
-  /// Opens Android system settings for exact alarm permission
+  /// ✅ FIX: Native plugin implementation. No android_intent package required!
   Future<void> requestExactAlarmsPermission() async {
     if (!defaultTargetPlatform.isAndroid) return;
 
-    final intent = AndroidIntent(
-      action: 'android.settings.REQUEST_SCHEDULE_EXACT_ALARM',
-    );
+    final plugin = FlutterLocalNotificationsPlugin()
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
 
-    await intent.launch();
+    // This calls the OS natively to request permission or open settings
+    await plugin?.requestExactAlarmsPermission();
   }
 
   // ── Task notifications ────────────────────────────────────────────────────

@@ -50,15 +50,11 @@ final class TaskRepositoryProvider
 
 String _$taskRepositoryHash() => r'5516d58b168da4130aff6e838768867a71f59b3f';
 
-/// The single manager provider for your entire Task screen UI state
-
 @ProviderFor(TasksStateNotifier)
 final tasksStateProvider = TasksStateNotifierProvider._();
 
-/// The single manager provider for your entire Task screen UI state
 final class TasksStateNotifierProvider
     extends $NotifierProvider<TasksStateNotifier, AsyncValue<TasksViewState>> {
-  /// The single manager provider for your entire Task screen UI state
   TasksStateNotifierProvider._()
     : super(
         from: null,
@@ -87,9 +83,7 @@ final class TasksStateNotifierProvider
 }
 
 String _$tasksStateNotifierHash() =>
-    r'938c1ee09fb729a4c0ebb870798d72cc6a4bc57d';
-
-/// The single manager provider for your entire Task screen UI state
+    r'00668ffc6e8027459a21bb0adb139d42db1a77d3';
 
 abstract class _$TasksStateNotifier
     extends $Notifier<AsyncValue<TasksViewState>> {
