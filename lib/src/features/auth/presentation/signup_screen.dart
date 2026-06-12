@@ -73,7 +73,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     ref.listen<AsyncValue>(authProvider, (_, next) {
       if (next.hasError) {
         final message = next.error.toString();
-        final isEmailConfirmation = message.contains('check your email');
+        final isEmailConfirmation = message.contains('SIGNUP_CONFIRM_EMAIL');
 
         ScaffoldMessenger.of(context)
           ..clearSnackBars()
@@ -225,8 +225,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   }
 
   String _parseError(String raw) {
-    if (raw.contains('Account created. Please check your email')) {
-      return 'Account created. Please check your email to confirm your account.';
+    if (raw.contains('SIGNUP_CONFIRM_EMAIL')) {
+      return 'Account created! Check your email to confirm, then sign in.';
     }
     if (raw.contains('User already registered')) {
       return 'An account with this email already exists.';

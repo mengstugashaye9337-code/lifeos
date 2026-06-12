@@ -53,7 +53,7 @@ class AuthRepository implements IAuthRepository {
     });
   }
 
-  // ── Sign up ───────────────────────────────────────────────────────────────
+  // ── Sign Up ───────────────────────────────────────────────────────────────
 
   @override
   Future<AuthModel> signUp({
@@ -66,17 +66,19 @@ class AuthRepository implements IAuthRepository {
     );
 
     final user = response.user;
+    final session = response.session;
+
     if (user == null) {
-      // Supabase returns null user when email confirmation is required
-      // We throw a clear domain error — not a raw Supabase exception
-      throw Exception(
-        'Account created. Please check your email to confirm your account.',
-      );
+      throw Exception('Sign up failed. Please try again.');
+    }
+
+    if (session == null) {
+      // ✅ Throw a distinct code token when email confirmation is active
+      throw Exception('SIGNUP_CONFIRM_EMAIL');
     }
 
     return AuthMapper.fromSupabaseUser(user);
   }
-
   // ── Sign in ───────────────────────────────────────────────────────────────
 
   @override
