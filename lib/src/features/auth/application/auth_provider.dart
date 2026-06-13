@@ -73,4 +73,8 @@ class AuthNotifier extends _$AuthNotifier {
       return null; // signed out = null user
     });
   }
+
+  void resetState() {
+    state = const AsyncData(null);
+  }
 }

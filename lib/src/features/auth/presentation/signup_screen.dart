@@ -74,12 +74,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       if (next.hasError) {
         final message = next.error.toString();
         final isEmailConfirmation = message.contains('SIGNUP_CONFIRM_EMAIL');
-
+        final userFriendlyMessage = _parseError(message);
         ScaffoldMessenger.of(context)
           ..clearSnackBars()
           ..showSnackBar(
             SnackBar(
-              content: Text(_parseError(message)),
+              content: Text(userFriendlyMessage),
               backgroundColor: isEmailConfirmation
                   ? Colors.green.shade600
                   : colorScheme.error,
@@ -89,7 +89,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
         if (isEmailConfirmation) {
           Future.delayed(const Duration(seconds: 2), () {
-            if (context.mounted) context.go(AppRoutes.login);
+            if (context.mounted) {
+              // 2. Clear out the sticky validation error from keepAlive memory
+              // before pushing the user out of this module context.
+              ref.read(authProvider.notifier).resetState();
+              context.go(AppRoutes.login);
+            }
           });
         }
       }
