@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:lifeos/src/features/auth/data/auth_mapper.dart';
 import 'package:lifeos/src/features/auth/domain/auth_model.dart';
@@ -18,6 +20,8 @@ abstract interface class IAuthRepository {
   Future<AuthModel> signIn({required String email, required String password});
 
   Future<void> signOut();
+
+  Future<String> updateAvatar({required String localFilePath});
 }
 
 // ---------------------------------------------------------------------------
@@ -104,5 +108,59 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<void> signOut() async {
     await _client.auth.signOut();
+  }
+
+  @override
+  Future<String> updateAvatar({required String localFilePath}) async {
+    // 1) Resolve the signed-in identity first.
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw Exception('You must be signed in to update your avatar.');
+    }
+
+    final storage = _client.storage.from('avatars');
+    final objectPath = '$userId/profile.jpg';
+    final file = File(localFilePath);
+
+    // 2) Guard against invalid local input before touching storage.
+    if (!await file.exists()) {
+      throw Exception('Avatar upload failed. The selected file was not found.');
+    }
+
+    try {
+      // 3) Upload deterministically to the user-scoped object path.
+      await storage.uploadBinary(
+        objectPath,
+        await file.readAsBytes(),
+        fileOptions: const FileOptions(upsert: true),
+      );
+
+      // 4) Resolve the public link immediately after upload.
+      final publicUrl = storage.getPublicUrl(objectPath);
+
+      try {
+        // 5) Persist the URL into the active auth session metadata.
+        await _client.auth.updateUser(
+          UserAttributes(
+            data: {'avatar_url': publicUrl},
+          ),
+        );
+      } catch (_) {
+        // 6) Roll back the uploaded object if auth metadata sync fails.
+        try {
+          await storage.remove([objectPath]);
+        } catch (_) {
+          // Best-effort cleanup only; do not mask the primary failure.
+        }
+        throw Exception(
+          'Avatar uploaded, but syncing your profile failed. Please try again.',
+        );
+      }
+
+      // 7) Return only the final public URL.
+      return publicUrl;
+    } catch (_) {
+      rethrow;
+    }
   }
 }

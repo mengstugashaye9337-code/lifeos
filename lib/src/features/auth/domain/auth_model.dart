@@ -8,6 +8,7 @@ abstract class AuthModel with _$AuthModel {
     required String id,
     required String email,
     required DateTime createdAt,
+    String? avatarUrl,
   }) = _AuthModel;
 
   const AuthModel._();

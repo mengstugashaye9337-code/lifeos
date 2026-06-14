@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AuthModel {
 
- String get id; String get email; DateTime get createdAt;
+ String get id; String get email; DateTime get createdAt; String? get avatarUrl;
 /// Create a copy of AuthModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $AuthModelCopyWith<AuthModel> get copyWith => _$AuthModelCopyWithImpl<AuthModel>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthModel&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthModel&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,email,createdAt);
+int get hashCode => Object.hash(runtimeType,id,email,createdAt,avatarUrl);
 
 @override
 String toString() {
-  return 'AuthModel(id: $id, email: $email, createdAt: $createdAt)';
+  return 'AuthModel(id: $id, email: $email, createdAt: $createdAt, avatarUrl: $avatarUrl)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $AuthModelCopyWith<$Res>  {
   factory $AuthModelCopyWith(AuthModel value, $Res Function(AuthModel) _then) = _$AuthModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String email, DateTime createdAt
+ String id, String email, DateTime createdAt, String? avatarUrl
 });
 
 
@@ -62,12 +62,13 @@ class _$AuthModelCopyWithImpl<$Res>
 
 /// Create a copy of AuthModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? email = null,Object? createdAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? email = null,Object? createdAt = null,Object? avatarUrl = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,avatarUrl: freezed == avatarUrl ? _self.avatarUrl : avatarUrl // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -152,10 +153,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String email,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String email,  DateTime createdAt,  String? avatarUrl)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuthModel() when $default != null:
-return $default(_that.id,_that.email,_that.createdAt);case _:
+return $default(_that.id,_that.email,_that.createdAt,_that.avatarUrl);case _:
   return orElse();
 
 }
@@ -173,10 +174,10 @@ return $default(_that.id,_that.email,_that.createdAt);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String email,  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String email,  DateTime createdAt,  String? avatarUrl)  $default,) {final _that = this;
 switch (_that) {
 case _AuthModel():
-return $default(_that.id,_that.email,_that.createdAt);case _:
+return $default(_that.id,_that.email,_that.createdAt,_that.avatarUrl);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -193,10 +194,10 @@ return $default(_that.id,_that.email,_that.createdAt);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String email,  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String email,  DateTime createdAt,  String? avatarUrl)?  $default,) {final _that = this;
 switch (_that) {
 case _AuthModel() when $default != null:
-return $default(_that.id,_that.email,_that.createdAt);case _:
+return $default(_that.id,_that.email,_that.createdAt,_that.avatarUrl);case _:
   return null;
 
 }
@@ -208,12 +209,13 @@ return $default(_that.id,_that.email,_that.createdAt);case _:
 
 
 class _AuthModel extends AuthModel {
-  const _AuthModel({required this.id, required this.email, required this.createdAt}): super._();
+  const _AuthModel({required this.id, required this.email, required this.createdAt, this.avatarUrl}): super._();
   
 
 @override final  String id;
 @override final  String email;
 @override final  DateTime createdAt;
+@override final  String? avatarUrl;
 
 /// Create a copy of AuthModel
 /// with the given fields replaced by the non-null parameter values.
@@ -225,16 +227,16 @@ _$AuthModelCopyWith<_AuthModel> get copyWith => __$AuthModelCopyWithImpl<_AuthMo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthModel&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthModel&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,email,createdAt);
+int get hashCode => Object.hash(runtimeType,id,email,createdAt,avatarUrl);
 
 @override
 String toString() {
-  return 'AuthModel(id: $id, email: $email, createdAt: $createdAt)';
+  return 'AuthModel(id: $id, email: $email, createdAt: $createdAt, avatarUrl: $avatarUrl)';
 }
 
 
@@ -245,7 +247,7 @@ abstract mixin class _$AuthModelCopyWith<$Res> implements $AuthModelCopyWith<$Re
   factory _$AuthModelCopyWith(_AuthModel value, $Res Function(_AuthModel) _then) = __$AuthModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String email, DateTime createdAt
+ String id, String email, DateTime createdAt, String? avatarUrl
 });
 
 
@@ -262,12 +264,13 @@ class __$AuthModelCopyWithImpl<$Res>
 
 /// Create a copy of AuthModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? email = null,Object? createdAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? email = null,Object? createdAt = null,Object? avatarUrl = freezed,}) {
   return _then(_AuthModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,avatarUrl: freezed == avatarUrl ? _self.avatarUrl : avatarUrl // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
