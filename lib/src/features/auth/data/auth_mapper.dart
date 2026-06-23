@@ -10,5 +10,6 @@ class AuthMapper {
     id: user.id,
     email: user.email ?? '',
     createdAt: DateTime.parse(user.createdAt),
+    avatarUrl: user.userMetadata?['avatar_url'] as String?,
   );
 }

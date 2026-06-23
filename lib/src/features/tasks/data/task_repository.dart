@@ -1,60 +1,51 @@
-// lib/src/features/tasks/data/task_repository.dart
-import 'package:drift/drift.dart';
 import 'package:lifeos/src/database/app_database.dart';
+import 'package:lifeos/src/features/tasks/data/task_mapper.dart';
+import 'package:lifeos/src/features/tasks/domain/task_model.dart';
 
 // ---------------------------------------------------------------------------
-// Priority enum with DB mapping
+// Abstract contract — swappable local ↔ remote (Phase E)
 // ---------------------------------------------------------------------------
 
-enum TaskPriority { low, medium, high }
-
-extension TaskPriorityExtension on TaskPriority {
-  int toDbValue() => index + 1;
-
-  String get label {
-    switch (this) {
-      case TaskPriority.low:
-        return 'Low';
-      case TaskPriority.medium:
-        return 'Medium';
-      case TaskPriority.high:
-        return 'High';
-    }
-  }
-}
-
-TaskPriority priorityFromDb(int value) {
-  if (value < 1 || value > TaskPriority.values.length) return TaskPriority.low;
-  return TaskPriority.values[value - 1];
+abstract interface class ITaskRepository {
+  Stream<List<TaskModel>> watchTasks();
+  Future<int> addTask(TaskModel task);
+  Future<void> updateTask(TaskModel task);
+  Future<void> toggleTask(TaskModel task);
+  Future<void> deleteTask(int id);
 }
 
 // ---------------------------------------------------------------------------
-// Repository
+// Local implementation — Drift + SQLite
 // ---------------------------------------------------------------------------
 
-class TaskRepository {
+class LocalTaskRepository implements ITaskRepository {
   final AppDatabase _db;
 
-  TaskRepository(this._db);
+  LocalTaskRepository(this._db);
 
-  Stream<List<Task>> watchTasks() => _db.select(_db.tasks).watch();
-
-  Future<int> addTask(TasksCompanion task) => _db.into(_db.tasks).insert(task);
-
-  /// Fixes Issue #2 safely: Uses the passed 'id' parameter directly for the search filter
-  Future<void> updateTask(int id, TasksCompanion task) =>
-      (_db.update(
-            _db.tasks,
-          )..where((t) => t.id.equals(id))) //  Changed from task.id.value to id
-          .write(task);
-
-  Future<void> toggleTask(Task task) {
-    return updateTask(
-      task.id,
-      TasksCompanion(isCompleted: Value(!task.isCompleted)),
+  @override
+  Stream<List<TaskModel>> watchTasks() {
+    return _db.select(_db.tasks).watch().map(
+      (rows) => rows.map(TaskMapper.fromRow).toList(),
     );
   }
 
+  @override
+  Future<int> addTask(TaskModel task) =>
+      _db.into(_db.tasks).insert(TaskMapper.toInsertCompanion(task));
+
+  @override
+  Future<void> updateTask(TaskModel task) =>
+      (_db.update(_db.tasks)..where((t) => t.id.equals(task.id))).write(
+        TaskMapper.toUpdateCompanion(task),
+      );
+
+  @override
+  Future<void> toggleTask(TaskModel task) {
+    return updateTask(task.copyWith(isCompleted: !task.isCompleted));
+  }
+
+  @override
   Future<int> deleteTask(int id) =>
       (_db.delete(_db.tasks)..where((t) => t.id.equals(id))).go();
 }

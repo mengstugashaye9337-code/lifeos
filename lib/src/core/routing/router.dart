@@ -10,6 +10,8 @@ import 'package:lifeos/src/features/tasks/presentation/task_screen.dart';
 import 'package:lifeos/src/features/habits/presentation/habit_screen.dart';
 import 'package:lifeos/src/features/notes/presentation/note_list_screen.dart';
 import 'package:lifeos/src/features/settings/presentation/settings_screen.dart';
+import 'package:lifeos/src/features/settings/presentation/profile_screen.dart';
+import 'package:lifeos/src/features/auth/presentation/user_profile_avatar.dart';
 
 // ---------------------------------------------------------------------------
 // Route name constants
@@ -22,6 +24,8 @@ abstract class AppRoutes {
   static const habits = '/habits';
   static const notes = '/notes';
   static const settings = '/settings';
+  static const profilescreen = '/profile_screen';
+  static const userprofileavatar = '/user-profile-avatar';
 }
 
 // ---------------------------------------------------------------------------
@@ -108,6 +112,14 @@ GoRouter createRouter(WidgetRef ref) {
       GoRoute(
         path: AppRoutes.notes,
         builder: (_, __) => const NoteListScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.profilescreen,
+        builder: (_, __) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.userprofileavatar,
+        builder: (_, __) => const UserProfileAvatar(),
       ),
     ],
   );

@@ -13,8 +13,9 @@ part of 'task_provider.dart';
 final taskRepositoryProvider = TaskRepositoryProvider._();
 
 final class TaskRepositoryProvider
-    extends $FunctionalProvider<TaskRepository, TaskRepository, TaskRepository>
-    with $Provider<TaskRepository> {
+    extends
+        $FunctionalProvider<ITaskRepository, ITaskRepository, ITaskRepository>
+    with $Provider<ITaskRepository> {
   TaskRepositoryProvider._()
     : super(
         from: null,
@@ -31,24 +32,24 @@ final class TaskRepositoryProvider
 
   @$internal
   @override
-  $ProviderElement<TaskRepository> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<ITaskRepository> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  TaskRepository create(Ref ref) {
+  ITaskRepository create(Ref ref) {
     return taskRepository(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(TaskRepository value) {
+  Override overrideWithValue(ITaskRepository value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<TaskRepository>(value),
+      providerOverride: $SyncValueProvider<ITaskRepository>(value),
     );
   }
 }
 
-String _$taskRepositoryHash() => r'5516d58b168da4130aff6e838768867a71f59b3f';
+String _$taskRepositoryHash() => r'4845f304cfab6ea6735595272482ba40b93de6b6';
 
 @ProviderFor(TasksStateNotifier)
 final tasksStateProvider = TasksStateNotifierProvider._();
@@ -83,7 +84,7 @@ final class TasksStateNotifierProvider
 }
 
 String _$tasksStateNotifierHash() =>
-    r'00668ffc6e8027459a21bb0adb139d42db1a77d3';
+    r'dd01e409763f348132d2075d4f1a14d372a7bc3d';
 
 abstract class _$TasksStateNotifier
     extends $Notifier<AsyncValue<TasksViewState>> {
