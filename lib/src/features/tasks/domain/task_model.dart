@@ -40,9 +40,14 @@ abstract class TaskModel with _$TaskModel {
     required TaskPriority priority,
     required DateTime createdAt,
     required bool isSynced,
+    String? remoteId,
+    required DateTime updatedAt,
+    DateTime? deletedAt,
   }) = _TaskModel;
 
   const TaskModel._();
+
+  bool get isDeleted => deletedAt != null;
 
   bool get isOverdue {
     if (isCompleted || dueDate == null) return false;

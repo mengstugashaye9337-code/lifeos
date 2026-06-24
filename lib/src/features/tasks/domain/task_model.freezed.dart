@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TaskModel {
 
- int get id; String get title; String? get description; DateTime? get dueDate; bool get isCompleted; TaskPriority get priority; DateTime get createdAt; bool get isSynced;
+ int get id; String get title; String? get description; DateTime? get dueDate; bool get isCompleted; TaskPriority get priority; DateTime get createdAt; bool get isSynced; String? get remoteId; DateTime get updatedAt; DateTime? get deletedAt;
 /// Create a copy of TaskModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $TaskModelCopyWith<TaskModel> get copyWith => _$TaskModelCopyWithImpl<TaskModel>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TaskModel&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.dueDate, dueDate) || other.dueDate == dueDate)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.isSynced, isSynced) || other.isSynced == isSynced));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TaskModel&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.dueDate, dueDate) || other.dueDate == dueDate)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.isSynced, isSynced) || other.isSynced == isSynced)&&(identical(other.remoteId, remoteId) || other.remoteId == remoteId)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,title,description,dueDate,isCompleted,priority,createdAt,isSynced);
+int get hashCode => Object.hash(runtimeType,id,title,description,dueDate,isCompleted,priority,createdAt,isSynced,remoteId,updatedAt,deletedAt);
 
 @override
 String toString() {
-  return 'TaskModel(id: $id, title: $title, description: $description, dueDate: $dueDate, isCompleted: $isCompleted, priority: $priority, createdAt: $createdAt, isSynced: $isSynced)';
+  return 'TaskModel(id: $id, title: $title, description: $description, dueDate: $dueDate, isCompleted: $isCompleted, priority: $priority, createdAt: $createdAt, isSynced: $isSynced, remoteId: $remoteId, updatedAt: $updatedAt, deletedAt: $deletedAt)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $TaskModelCopyWith<$Res>  {
   factory $TaskModelCopyWith(TaskModel value, $Res Function(TaskModel) _then) = _$TaskModelCopyWithImpl;
 @useResult
 $Res call({
- int id, String title, String? description, DateTime? dueDate, bool isCompleted, TaskPriority priority, DateTime createdAt, bool isSynced
+ int id, String title, String? description, DateTime? dueDate, bool isCompleted, TaskPriority priority, DateTime createdAt, bool isSynced, String? remoteId, DateTime updatedAt, DateTime? deletedAt
 });
 
 
@@ -62,7 +62,7 @@ class _$TaskModelCopyWithImpl<$Res>
 
 /// Create a copy of TaskModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? description = freezed,Object? dueDate = freezed,Object? isCompleted = null,Object? priority = null,Object? createdAt = null,Object? isSynced = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? description = freezed,Object? dueDate = freezed,Object? isCompleted = null,Object? priority = null,Object? createdAt = null,Object? isSynced = null,Object? remoteId = freezed,Object? updatedAt = null,Object? deletedAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -72,7 +72,10 @@ as DateTime?,isCompleted: null == isCompleted ? _self.isCompleted : isCompleted 
 as bool,priority: null == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
 as TaskPriority,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,isSynced: null == isSynced ? _self.isSynced : isSynced // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,remoteId: freezed == remoteId ? _self.remoteId : remoteId // ignore: cast_nullable_to_non_nullable
+as String?,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 
@@ -157,10 +160,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String title,  String? description,  DateTime? dueDate,  bool isCompleted,  TaskPriority priority,  DateTime createdAt,  bool isSynced)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String title,  String? description,  DateTime? dueDate,  bool isCompleted,  TaskPriority priority,  DateTime createdAt,  bool isSynced,  String? remoteId,  DateTime updatedAt,  DateTime? deletedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TaskModel() when $default != null:
-return $default(_that.id,_that.title,_that.description,_that.dueDate,_that.isCompleted,_that.priority,_that.createdAt,_that.isSynced);case _:
+return $default(_that.id,_that.title,_that.description,_that.dueDate,_that.isCompleted,_that.priority,_that.createdAt,_that.isSynced,_that.remoteId,_that.updatedAt,_that.deletedAt);case _:
   return orElse();
 
 }
@@ -178,10 +181,10 @@ return $default(_that.id,_that.title,_that.description,_that.dueDate,_that.isCom
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String title,  String? description,  DateTime? dueDate,  bool isCompleted,  TaskPriority priority,  DateTime createdAt,  bool isSynced)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String title,  String? description,  DateTime? dueDate,  bool isCompleted,  TaskPriority priority,  DateTime createdAt,  bool isSynced,  String? remoteId,  DateTime updatedAt,  DateTime? deletedAt)  $default,) {final _that = this;
 switch (_that) {
 case _TaskModel():
-return $default(_that.id,_that.title,_that.description,_that.dueDate,_that.isCompleted,_that.priority,_that.createdAt,_that.isSynced);case _:
+return $default(_that.id,_that.title,_that.description,_that.dueDate,_that.isCompleted,_that.priority,_that.createdAt,_that.isSynced,_that.remoteId,_that.updatedAt,_that.deletedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +201,10 @@ return $default(_that.id,_that.title,_that.description,_that.dueDate,_that.isCom
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String title,  String? description,  DateTime? dueDate,  bool isCompleted,  TaskPriority priority,  DateTime createdAt,  bool isSynced)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String title,  String? description,  DateTime? dueDate,  bool isCompleted,  TaskPriority priority,  DateTime createdAt,  bool isSynced,  String? remoteId,  DateTime updatedAt,  DateTime? deletedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _TaskModel() when $default != null:
-return $default(_that.id,_that.title,_that.description,_that.dueDate,_that.isCompleted,_that.priority,_that.createdAt,_that.isSynced);case _:
+return $default(_that.id,_that.title,_that.description,_that.dueDate,_that.isCompleted,_that.priority,_that.createdAt,_that.isSynced,_that.remoteId,_that.updatedAt,_that.deletedAt);case _:
   return null;
 
 }
@@ -213,7 +216,7 @@ return $default(_that.id,_that.title,_that.description,_that.dueDate,_that.isCom
 
 
 class _TaskModel extends TaskModel {
-  const _TaskModel({required this.id, required this.title, this.description, this.dueDate, required this.isCompleted, required this.priority, required this.createdAt, required this.isSynced}): super._();
+  const _TaskModel({required this.id, required this.title, this.description, this.dueDate, required this.isCompleted, required this.priority, required this.createdAt, required this.isSynced, this.remoteId, required this.updatedAt, this.deletedAt}): super._();
   
 
 @override final  int id;
@@ -224,6 +227,9 @@ class _TaskModel extends TaskModel {
 @override final  TaskPriority priority;
 @override final  DateTime createdAt;
 @override final  bool isSynced;
+@override final  String? remoteId;
+@override final  DateTime updatedAt;
+@override final  DateTime? deletedAt;
 
 /// Create a copy of TaskModel
 /// with the given fields replaced by the non-null parameter values.
@@ -235,16 +241,16 @@ _$TaskModelCopyWith<_TaskModel> get copyWith => __$TaskModelCopyWithImpl<_TaskMo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TaskModel&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.dueDate, dueDate) || other.dueDate == dueDate)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.isSynced, isSynced) || other.isSynced == isSynced));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TaskModel&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.dueDate, dueDate) || other.dueDate == dueDate)&&(identical(other.isCompleted, isCompleted) || other.isCompleted == isCompleted)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.isSynced, isSynced) || other.isSynced == isSynced)&&(identical(other.remoteId, remoteId) || other.remoteId == remoteId)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,title,description,dueDate,isCompleted,priority,createdAt,isSynced);
+int get hashCode => Object.hash(runtimeType,id,title,description,dueDate,isCompleted,priority,createdAt,isSynced,remoteId,updatedAt,deletedAt);
 
 @override
 String toString() {
-  return 'TaskModel(id: $id, title: $title, description: $description, dueDate: $dueDate, isCompleted: $isCompleted, priority: $priority, createdAt: $createdAt, isSynced: $isSynced)';
+  return 'TaskModel(id: $id, title: $title, description: $description, dueDate: $dueDate, isCompleted: $isCompleted, priority: $priority, createdAt: $createdAt, isSynced: $isSynced, remoteId: $remoteId, updatedAt: $updatedAt, deletedAt: $deletedAt)';
 }
 
 
@@ -255,7 +261,7 @@ abstract mixin class _$TaskModelCopyWith<$Res> implements $TaskModelCopyWith<$Re
   factory _$TaskModelCopyWith(_TaskModel value, $Res Function(_TaskModel) _then) = __$TaskModelCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String title, String? description, DateTime? dueDate, bool isCompleted, TaskPriority priority, DateTime createdAt, bool isSynced
+ int id, String title, String? description, DateTime? dueDate, bool isCompleted, TaskPriority priority, DateTime createdAt, bool isSynced, String? remoteId, DateTime updatedAt, DateTime? deletedAt
 });
 
 
@@ -272,7 +278,7 @@ class __$TaskModelCopyWithImpl<$Res>
 
 /// Create a copy of TaskModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? description = freezed,Object? dueDate = freezed,Object? isCompleted = null,Object? priority = null,Object? createdAt = null,Object? isSynced = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? description = freezed,Object? dueDate = freezed,Object? isCompleted = null,Object? priority = null,Object? createdAt = null,Object? isSynced = null,Object? remoteId = freezed,Object? updatedAt = null,Object? deletedAt = freezed,}) {
   return _then(_TaskModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -282,7 +288,10 @@ as DateTime?,isCompleted: null == isCompleted ? _self.isCompleted : isCompleted 
 as bool,priority: null == priority ? _self.priority : priority // ignore: cast_nullable_to_non_nullable
 as TaskPriority,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,isSynced: null == isSynced ? _self.isSynced : isSynced // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,remoteId: freezed == remoteId ? _self.remoteId : remoteId // ignore: cast_nullable_to_non_nullable
+as String?,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 

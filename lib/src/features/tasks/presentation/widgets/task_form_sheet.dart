@@ -63,10 +63,10 @@ class _TaskFormSheetState extends ConsumerState<TaskFormSheet> {
           description: description.isEmpty ? null : description,
           priority: _priority,
           dueDate: _dueDate,
-          isSynced: false,
         ),
       );
     } else {
+      final now = DateTime.now();
       await notifier.addTask(
         TaskModel(
           id: 0,
@@ -75,7 +75,8 @@ class _TaskFormSheetState extends ConsumerState<TaskFormSheet> {
           dueDate: _dueDate,
           isCompleted: false,
           priority: _priority,
-          createdAt: DateTime.now(),
+          createdAt: now,
+          updatedAt: now,
           isSynced: false,
         ),
       );

@@ -20,6 +20,10 @@ class Tasks extends Table {
   IntColumn get priority => integer().withDefault(const Constant(1))();
   BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  // ── v4: sync metadata ──
+  TextColumn get remoteId => text().nullable()();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
 }
 
 class Notes extends Table {
@@ -62,9 +66,9 @@ class AppDatabase extends _$AppDatabase {
   // Expose a named constructor for tests so tests can pass an in-memory DB.
   AppDatabase.forTesting(super.e);
 
-  // ✅ Bumped schema version to 3
+  // Bumped to 4 — task sync metadata columns
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -77,10 +81,18 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(habits, habits.isSynced);
         await m.addColumn(habits, habits.createdAt);
       }
-      // ── Safe isolated migration sequence for version 3 ──
       if (from < 3) {
         await m.addColumn(habits, habits.lastCompletedDate);
         await m.createTable(habitCompletions);
+      }
+      if (from < 4) {
+        await m.addColumn(tasks, tasks.remoteId);
+        await m.addColumn(tasks, tasks.updatedAt);
+        await m.addColumn(tasks, tasks.deletedAt);
+        // Backfill updated_at from created_at for existing rows
+        await m.database.customStatement(
+          'UPDATE tasks SET updated_at = created_at',
+        );
       }
     },
   );

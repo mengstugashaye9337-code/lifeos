@@ -16,6 +16,9 @@ class TaskMapper {
     priority: TaskPriorityX.fromDb(row.priority),
     createdAt: row.createdAt,
     isSynced: row.isSynced,
+    remoteId: row.remoteId,
+    updatedAt: row.updatedAt,
+    deletedAt: row.deletedAt,
   );
 
   // ── Domain Model → DB Companion (for insert) ─────────────────────────────
@@ -26,6 +29,9 @@ class TaskMapper {
         description: drift.Value(model.description),
         dueDate: drift.Value(model.dueDate),
         priority: drift.Value(model.priority.toDbValue()),
+        isSynced: drift.Value(model.isSynced),
+        updatedAt: drift.Value(model.updatedAt),
+        remoteId: drift.Value(model.remoteId),
       );
 
   // ── Domain Model → DB Companion (for update) ─────────────────────────────
@@ -38,5 +44,21 @@ class TaskMapper {
     isCompleted: drift.Value(model.isCompleted),
     priority: drift.Value(model.priority.toDbValue()),
     isSynced: drift.Value(model.isSynced),
+    remoteId: drift.Value(model.remoteId),
+    updatedAt: drift.Value(model.updatedAt),
+    deletedAt: drift.Value(model.deletedAt),
+  );
+
+  // ── Sync coordinator helper — mark row clean after remote push ───────────
+
+  static TasksCompanion toSyncedCompanion({
+    required int id,
+    required String remoteId,
+    required DateTime updatedAt,
+  }) => TasksCompanion(
+    id: drift.Value(id),
+    remoteId: drift.Value(remoteId),
+    updatedAt: drift.Value(updatedAt),
+    isSynced: const drift.Value(true),
   );
 }
