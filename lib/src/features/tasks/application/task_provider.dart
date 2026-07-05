@@ -1,22 +1,30 @@
-// lib/src/features/tasks/presentation/task_provider.dart
 import 'dart:async';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:lifeos/src/database/database_provider.dart'; // ✅ Added
+import 'package:lifeos/src/database/database_provider.dart';
+import 'package:lifeos/src/features/tasks/application/task_sync_coordinator.dart';
+import 'package:lifeos/src/features/tasks/data/remote_task_repository.dart';
 import 'package:lifeos/src/features/tasks/data/task_repository.dart';
-import 'package:lifeos/src/database/app_database.dart';
+import 'package:lifeos/src/features/tasks/domain/task_model.dart';
 import 'package:lifeos/src/services/notification_provider.dart';
-//import 'package:drift/drift.dart' as drift;
+import 'package:lifeos/src/services/supabase_service.dart';
 
 part 'task_provider.g.dart';
 
 // ---------------------------------------------------------------------------
-// Repository provider
+// Repository provider — depends on interface, not concrete class
 // ---------------------------------------------------------------------------
 
 @riverpod
-TaskRepository taskRepository(Ref ref) {
+ITaskRepository taskRepository(Ref ref) {
   final db = ref.watch(appDatabaseProvider);
-  return TaskRepository(db);
+  // Session 3 keeps tasks local-first; remote sync is orchestrated explicitly.
+  return LocalTaskRepository(db);
+}
+
+@riverpod
+RemoteTaskRepository remoteTaskRepository(Ref ref) {
+  return RemoteTaskRepository(SupabaseService.client);
 }
 
 // ---------------------------------------------------------------------------
@@ -30,12 +38,12 @@ enum TaskFilter { all, pending, completed }
 // ---------------------------------------------------------------------------
 
 class TasksViewState {
-  final List<Task> allTasks;
+  final List<TaskModel> allTasks;
   final TaskFilter filter;
 
   TasksViewState({required this.allTasks, required this.filter});
 
-  List<Task> get filteredTasks {
+  List<TaskModel> get filteredTasks {
     switch (filter) {
       case TaskFilter.all:
         return allTasks;
@@ -46,31 +54,23 @@ class TasksViewState {
     }
   }
 
-  List<Task> get overdueTasks {
-    final now = DateTime.now();
-    return allTasks
-        .where(
-          (t) =>
-              !t.isCompleted && t.dueDate != null && t.dueDate!.isBefore(now),
-        )
-        .toList();
+  List<TaskModel> get overdueTasks {
+    return allTasks.where((t) => t.isOverdue).toList();
   }
 }
 
 // ---------------------------------------------------------------------------
-// TasksStateNotifier — owns stream, filter state, mutations, notifications
+// TasksStateNotifier — owns stream, filter, mutations, notifications
 // ---------------------------------------------------------------------------
 
 @riverpod
 class TasksStateNotifier extends _$TasksStateNotifier {
-  StreamSubscription<List<Task>>? _subscription;
+  StreamSubscription<List<TaskModel>>? _subscription;
 
   @override
   AsyncValue<TasksViewState> build() {
-    // ✅ Fixed return type
     ref.onDispose(() => _subscription?.cancel());
 
-    // ✅ Read directly into build context to avoid lifecycle race conditions
     final repo = ref.read(taskRepositoryProvider);
 
     _subscription?.cancel();
@@ -86,14 +86,13 @@ class TasksStateNotifier extends _$TasksStateNotifier {
     return const AsyncValue.loading();
   }
 
-  // ── Accessors ─────────────────────────────────────────────────────────────
-
-  TaskRepository get _repo => ref.read(taskRepositoryProvider);
+  ITaskRepository get _repo => ref.read(taskRepositoryProvider);
 
   NotificationNotifier get _notifications =>
       ref.read(notificationProvider.notifier);
 
-  // ── Filter ────────────────────────────────────────────────────────────────
+  void _requestSyncIfSignedIn() =>
+      ref.read(taskSyncCoordinatorProvider.notifier).requestSync();
 
   void setFilter(TaskFilter newFilter) {
     if (state.hasValue) {
@@ -103,25 +102,22 @@ class TasksStateNotifier extends _$TasksStateNotifier {
     }
   }
 
-  // ── Add ───────────────────────────────────────────────────────────────────
-
-  Future<void> addTask(TasksCompanion task) async {
+  Future<void> addTask(TaskModel task) async {
     try {
       final id = await _repo.addTask(task);
 
       await _notifications.scheduleTaskReminder(
         taskId: id,
-        taskTitle: task.title.value,
-        dueDate: task.dueDate.present ? task.dueDate.value : null,
+        taskTitle: task.title,
+        dueDate: task.dueDate,
       );
-    } catch (e) {
-      state = AsyncValue.error(e, StackTrace.current);
+      _requestSyncIfSignedIn();
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
     }
   }
 
-  // ── Toggle complete ───────────────────────────────────────────────────────
-
-  Future<void> toggleTask(Task task) async {
+  Future<void> toggleTask(TaskModel task) async {
     try {
       await _repo.toggleTask(task);
 
@@ -134,56 +130,43 @@ class TasksStateNotifier extends _$TasksStateNotifier {
           dueDate: task.dueDate,
         );
       }
-    } catch (e) {
-      state = AsyncValue.error(e, StackTrace.current);
+      _requestSyncIfSignedIn();
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
     }
   }
 
-  // ── Update ────────────────────────────────────────────────────────────────
-
-  Future<void> updateTask(TasksCompanion task) async {
+  Future<void> updateTask(TaskModel task) async {
     try {
-      await _repo.updateTask(task.id.value, task);
+      await _repo.updateTask(task);
 
-      await _notifications.cancelTaskReminder(task.id.value);
+      await _notifications.cancelTaskReminder(task.id);
 
-      final isCompleted = task.isCompleted.present
-          ? task.isCompleted.value
-          : false;
-
-      if (!isCompleted) {
+      if (!task.isCompleted) {
         await _notifications.scheduleTaskReminder(
-          taskId: task.id.value,
-          taskTitle: task.title.value,
-          dueDate: task.dueDate.present ? task.dueDate.value : null,
+          taskId: task.id,
+          taskTitle: task.title,
+          dueDate: task.dueDate,
         );
       }
-    } catch (e) {
-      state = AsyncValue.error(e, StackTrace.current);
+      _requestSyncIfSignedIn();
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
     }
   }
-
-  // ── Delete ────────────────────────────────────────────────────────────────
 
   Future<void> deleteTask(int id) async {
     try {
       await _notifications.cancelTaskReminder(id);
       await _repo.deleteTask(id);
-    } catch (e) {
-      state = AsyncValue.error(e, StackTrace.current);
+      _requestSyncIfSignedIn();
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
     }
   }
 
-  // ── Overdue summary ───────────────────────────────────────────────────────
-
-  Future<void> _refreshOverdueSummary(List<Task> tasks) async {
-    final now = DateTime.now();
-    final overdueCount = tasks
-        .where(
-          (t) =>
-              !t.isCompleted && t.dueDate != null && t.dueDate!.isBefore(now),
-        )
-        .length;
+  Future<void> _refreshOverdueSummary(List<TaskModel> tasks) async {
+    final overdueCount = tasks.where((t) => t.isOverdue).length;
 
     await _notifications.scheduleOverdueTasksSummary(
       overdueCount: overdueCount,

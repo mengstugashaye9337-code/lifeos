@@ -9,12 +9,14 @@ class HabitMapper {
 
   static HabitModel fromRow(Habit row) => HabitModel(
     id: row.id,
+    remoteId: row.remoteId,
     title: row.title,
     frequency: HabitFrequencyX.fromDb(row.frequency),
     streak: row.streak,
     createdAt: row.createdAt,
     isSynced: row.isSynced,
     lastCompletedDate: row.lastCompletedDate,
+    updatedAt: row.updatedAt,
   );
 
   // ── Domain Model → DB Companion (for insert) ───────────────────────────
@@ -29,11 +31,13 @@ class HabitMapper {
 
   static HabitsCompanion toUpdateCompanion(HabitModel model) => HabitsCompanion(
     id: drift.Value(model.id),
+    remoteId: drift.Value(model.remoteId),
     title: drift.Value(model.title),
     frequency: drift.Value(model.frequency.toDbValue()),
     streak: drift.Value(model.streak),
     isSynced: drift.Value(model.isSynced),
     lastCompletedDate: drift.Value(model.lastCompletedDate),
+    updatedAt: drift.Value(model.updatedAt),
   );
 
   // ── Streak-only update companion ──────────────────────────────────────

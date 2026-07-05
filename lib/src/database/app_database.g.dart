@@ -110,6 +110,40 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
+    'remoteId',
+  );
+  @override
+  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
+    'remote_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -120,6 +154,9 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
     priority,
     isSynced,
     createdAt,
+    remoteId,
+    updatedAt,
+    deletedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -186,6 +223,24 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('remote_id')) {
+      context.handle(
+        _remoteIdMeta,
+        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -227,6 +282,18 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      remoteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remote_id'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
     );
   }
 
@@ -245,6 +312,9 @@ class Task extends DataClass implements Insertable<Task> {
   final int priority;
   final bool isSynced;
   final DateTime createdAt;
+  final String? remoteId;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
   const Task({
     required this.id,
     required this.title,
@@ -254,6 +324,9 @@ class Task extends DataClass implements Insertable<Task> {
     required this.priority,
     required this.isSynced,
     required this.createdAt,
+    this.remoteId,
+    required this.updatedAt,
+    this.deletedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -270,6 +343,13 @@ class Task extends DataClass implements Insertable<Task> {
     map['priority'] = Variable<int>(priority);
     map['is_synced'] = Variable<bool>(isSynced);
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || remoteId != null) {
+      map['remote_id'] = Variable<String>(remoteId);
+    }
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
     return map;
   }
 
@@ -287,6 +367,13 @@ class Task extends DataClass implements Insertable<Task> {
       priority: Value(priority),
       isSynced: Value(isSynced),
       createdAt: Value(createdAt),
+      remoteId: remoteId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remoteId),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
     );
   }
 
@@ -304,6 +391,9 @@ class Task extends DataClass implements Insertable<Task> {
       priority: serializer.fromJson<int>(json['priority']),
       isSynced: serializer.fromJson<bool>(json['isSynced']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      remoteId: serializer.fromJson<String?>(json['remoteId']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
   }
   @override
@@ -318,6 +408,9 @@ class Task extends DataClass implements Insertable<Task> {
       'priority': serializer.toJson<int>(priority),
       'isSynced': serializer.toJson<bool>(isSynced),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'remoteId': serializer.toJson<String?>(remoteId),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
   }
 
@@ -330,6 +423,9 @@ class Task extends DataClass implements Insertable<Task> {
     int? priority,
     bool? isSynced,
     DateTime? createdAt,
+    Value<String?> remoteId = const Value.absent(),
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
   }) => Task(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -339,6 +435,9 @@ class Task extends DataClass implements Insertable<Task> {
     priority: priority ?? this.priority,
     isSynced: isSynced ?? this.isSynced,
     createdAt: createdAt ?? this.createdAt,
+    remoteId: remoteId.present ? remoteId.value : this.remoteId,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   Task copyWithCompanion(TasksCompanion data) {
     return Task(
@@ -354,6 +453,9 @@ class Task extends DataClass implements Insertable<Task> {
       priority: data.priority.present ? data.priority.value : this.priority,
       isSynced: data.isSynced.present ? data.isSynced.value : this.isSynced,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
 
@@ -367,7 +469,10 @@ class Task extends DataClass implements Insertable<Task> {
           ..write('isCompleted: $isCompleted, ')
           ..write('priority: $priority, ')
           ..write('isSynced: $isSynced, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('remoteId: $remoteId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
@@ -382,6 +487,9 @@ class Task extends DataClass implements Insertable<Task> {
     priority,
     isSynced,
     createdAt,
+    remoteId,
+    updatedAt,
+    deletedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -394,7 +502,10 @@ class Task extends DataClass implements Insertable<Task> {
           other.isCompleted == this.isCompleted &&
           other.priority == this.priority &&
           other.isSynced == this.isSynced &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.remoteId == this.remoteId &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
 }
 
 class TasksCompanion extends UpdateCompanion<Task> {
@@ -406,6 +517,9 @@ class TasksCompanion extends UpdateCompanion<Task> {
   final Value<int> priority;
   final Value<bool> isSynced;
   final Value<DateTime> createdAt;
+  final Value<String?> remoteId;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
   const TasksCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
@@ -415,6 +529,9 @@ class TasksCompanion extends UpdateCompanion<Task> {
     this.priority = const Value.absent(),
     this.isSynced = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.remoteId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
   });
   TasksCompanion.insert({
     this.id = const Value.absent(),
@@ -425,6 +542,9 @@ class TasksCompanion extends UpdateCompanion<Task> {
     this.priority = const Value.absent(),
     this.isSynced = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.remoteId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
   }) : title = Value(title);
   static Insertable<Task> custom({
     Expression<int>? id,
@@ -435,6 +555,9 @@ class TasksCompanion extends UpdateCompanion<Task> {
     Expression<int>? priority,
     Expression<bool>? isSynced,
     Expression<DateTime>? createdAt,
+    Expression<String>? remoteId,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -445,6 +568,9 @@ class TasksCompanion extends UpdateCompanion<Task> {
       if (priority != null) 'priority': priority,
       if (isSynced != null) 'is_synced': isSynced,
       if (createdAt != null) 'created_at': createdAt,
+      if (remoteId != null) 'remote_id': remoteId,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
     });
   }
 
@@ -457,6 +583,9 @@ class TasksCompanion extends UpdateCompanion<Task> {
     Value<int>? priority,
     Value<bool>? isSynced,
     Value<DateTime>? createdAt,
+    Value<String?>? remoteId,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
   }) {
     return TasksCompanion(
       id: id ?? this.id,
@@ -467,6 +596,9 @@ class TasksCompanion extends UpdateCompanion<Task> {
       priority: priority ?? this.priority,
       isSynced: isSynced ?? this.isSynced,
       createdAt: createdAt ?? this.createdAt,
+      remoteId: remoteId ?? this.remoteId,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
     );
   }
 
@@ -497,6 +629,15 @@ class TasksCompanion extends UpdateCompanion<Task> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<String>(remoteId.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
     return map;
   }
 
@@ -510,7 +651,10 @@ class TasksCompanion extends UpdateCompanion<Task> {
           ..write('isCompleted: $isCompleted, ')
           ..write('priority: $priority, ')
           ..write('isSynced: $isSynced, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('remoteId: $remoteId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
@@ -1627,6 +1771,9 @@ typedef $$TasksTableCreateCompanionBuilder =
       Value<int> priority,
       Value<bool> isSynced,
       Value<DateTime> createdAt,
+      Value<String?> remoteId,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
     });
 typedef $$TasksTableUpdateCompanionBuilder =
     TasksCompanion Function({
@@ -1638,6 +1785,9 @@ typedef $$TasksTableUpdateCompanionBuilder =
       Value<int> priority,
       Value<bool> isSynced,
       Value<DateTime> createdAt,
+      Value<String?> remoteId,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
     });
 
 class $$TasksTableFilterComposer extends Composer<_$AppDatabase, $TasksTable> {
@@ -1685,6 +1835,21 @@ class $$TasksTableFilterComposer extends Composer<_$AppDatabase, $TasksTable> {
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -1737,6 +1902,21 @@ class $$TasksTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TasksTableAnnotationComposer
@@ -1775,6 +1955,15 @@ class $$TasksTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
 
 class $$TasksTableTableManager
@@ -1813,6 +2002,9 @@ class $$TasksTableTableManager
                 Value<int> priority = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String?> remoteId = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
               }) => TasksCompanion(
                 id: id,
                 title: title,
@@ -1822,6 +2014,9 @@ class $$TasksTableTableManager
                 priority: priority,
                 isSynced: isSynced,
                 createdAt: createdAt,
+                remoteId: remoteId,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
               ),
           createCompanionCallback:
               ({
@@ -1833,6 +2028,9 @@ class $$TasksTableTableManager
                 Value<int> priority = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String?> remoteId = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
               }) => TasksCompanion.insert(
                 id: id,
                 title: title,
@@ -1842,6 +2040,9 @@ class $$TasksTableTableManager
                 priority: priority,
                 isSynced: isSynced,
                 createdAt: createdAt,
+                remoteId: remoteId,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

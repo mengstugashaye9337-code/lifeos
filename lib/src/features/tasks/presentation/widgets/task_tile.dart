@@ -1,28 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lifeos/src/core/utils/utils.dart';
-// Make sure to import your repository provider and task model location:
-import 'package:lifeos/src/features/tasks/application/task_provider.dart';
-import 'package:lifeos/src/features/tasks/presentation/widgets/task_form_sheet.dart';
 import 'package:lifeos/src/features/tasks/application/task_ai_bridge.dart';
-import 'package:lifeos/src/database/app_database.dart'; // Exposes the Task class
+import 'package:lifeos/src/features/tasks/application/task_provider.dart';
+import 'package:lifeos/src/features/tasks/domain/task_model.dart';
+import 'package:lifeos/src/features/tasks/presentation/widgets/task_form_sheet.dart';
 
 class TaskTile extends ConsumerWidget {
-  final Task task; // Passed down from the parent ListView
+  final TaskModel task;
 
   const TaskTile({super.key, required this.task});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
-
-    // Fallback or setup for your priority mapping logic if needed
-    final priorityColor = getPriorityColor(task.priority);
+    final priorityColor = getPriorityColor(task.priority.toDbValue());
 
     return ListTile(
       leading: Checkbox(
         value: task.isCompleted,
-        onChanged: (_) => ref.read(taskRepositoryProvider).toggleTask(task),
+        onChanged: (_) =>
+            ref.read(tasksStateProvider.notifier).toggleTask(task),
       ),
       title: Text(
         task.title,
@@ -42,7 +40,6 @@ class TaskTile extends ConsumerWidget {
             ),
           Row(
             children: [
-              // Priority badge
               Container(
                 margin: const EdgeInsets.only(top: 4, right: 8),
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -52,16 +49,10 @@ class TaskTile extends ConsumerWidget {
                   border: Border.all(color: priorityColor, width: 0.8),
                 ),
                 child: Text(
-                  // Fallback string label depending on your priority configuration
-                  task.priority == 3
-                      ? 'High'
-                      : task.priority == 2
-                      ? 'Medium'
-                      : 'Low',
+                  task.priority.label,
                   style: TextStyle(fontSize: 11, color: priorityColor),
                 ),
               ),
-              // Due date
               if (task.dueDate != null)
                 Text(
                   formatShortDate(task.dueDate!),
@@ -83,13 +74,12 @@ class TaskTile extends ConsumerWidget {
         children: [
           IconButton(
             icon: const Icon(Icons.edit_outlined, size: 20),
-            // ✅ CHANGED: Calls our new public wrapper function!
             onPressed: () => showTaskFormSheet(context, ref, task: task),
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline, size: 20),
             onPressed: () =>
-                ref.read(taskRepositoryProvider).deleteTask(task.id),
+                ref.read(tasksStateProvider.notifier).deleteTask(task.id),
           ),
         ],
       ),
@@ -97,8 +87,11 @@ class TaskTile extends ConsumerWidget {
   }
 }
 
-void showTaskFormSheet(BuildContext context, WidgetRef ref, {Task? task}) {
-  // Reset the AI helper provider context cleanly
+void showTaskFormSheet(
+  BuildContext context,
+  WidgetRef ref, {
+  TaskModel? task,
+}) {
   ref.read(taskAiBridgeProvider.notifier).reset();
 
   showModalBottomSheet(

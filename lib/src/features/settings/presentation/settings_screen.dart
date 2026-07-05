@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lifeos/src/features/auth/application/auth_provider.dart';
+import 'package:lifeos/src/features/tasks/application/task_sync_coordinator.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -31,9 +32,29 @@ class SettingsScreen extends ConsumerWidget {
     }
   }
 
+  Future<void> _syncTasks(BuildContext context, WidgetRef ref) async {
+    try {
+      final result = await ref.read(taskSyncCoordinatorProvider.notifier).sync();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Synced ${result.pushed} up, ${result.pulled} down',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sync failed: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
+    final syncStatus = ref.watch(taskSyncCoordinatorProvider);
     final user = authState.value;
     final colorScheme = Theme.of(context).colorScheme;
     final email = user?.email;
@@ -54,6 +75,26 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
+          if (user != null) ...[
+            FilledButton.tonalIcon(
+              onPressed: syncStatus == TaskSyncStatus.syncing
+                  ? null
+                  : () => _syncTasks(context, ref),
+              icon: syncStatus == TaskSyncStatus.syncing
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.sync),
+              label: Text(
+                syncStatus == TaskSyncStatus.syncing
+                    ? 'Syncing tasks...'
+                    : 'Sync tasks now',
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           FilledButton.tonalIcon(
             style: FilledButton.styleFrom(
               backgroundColor: colorScheme.errorContainer,

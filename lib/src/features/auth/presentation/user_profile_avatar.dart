@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:lifeos/src/features/auth/application/auth_provider.dart';
 import 'package:lifeos/src/features/auth/application/profile_controller.dart';
+import 'package:lifeos/src/features/auth/presentation/auth_ui_extensions.dart';
 
 class UserProfileAvatar extends ConsumerWidget {
   const UserProfileAvatar({super.key, this.radius = 40});
@@ -38,10 +39,8 @@ class UserProfileAvatar extends ConsumerWidget {
     final uploadState = ref.watch(profileControllerProvider);
     final user = authState.value;
     final avatarUrl = user?.avatarUrl;
-    final displayName = user?.displayName ?? '';
-    final fallbackLetter = displayName.isNotEmpty
-        ? displayName[0].toUpperCase()
-        : '?';
+
+    final fallbackLetter = user?.avatarFallbackLetter ?? '?';
 
     return GestureDetector(
       onTap: uploadState.isLoading ? null : () => _pickAndUploadImage(ref),

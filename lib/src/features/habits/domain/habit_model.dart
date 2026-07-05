@@ -28,12 +28,16 @@ extension HabitFrequencyX on HabitFrequency {
 abstract class HabitModel with _$HabitModel {
   const factory HabitModel({
     required int id,
+    String? remoteId,
+
     required String title,
     required HabitFrequency frequency,
     required int streak,
+    DateTime? lastCompletedDate,
+
     required DateTime createdAt,
     required bool isSynced,
-    DateTime? lastCompletedDate,
+    required DateTime updatedAt,
   }) = _HabitModel;
 
   // Convenience — is this habit already done for today?

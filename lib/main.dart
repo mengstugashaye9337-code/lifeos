@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lifeos/src/core/routing/router.dart';
 import 'package:lifeos/src/core/theme/theme.dart';
+import 'package:lifeos/src/features/tasks/application/task_sync_coordinator.dart';
 import 'package:lifeos/src/services/supabase_service.dart';
 
 void main() async {
@@ -18,6 +19,8 @@ class LifeOSApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(themeProvider);
+    // Keep sync coordinator alive for auth-triggered background sync.
+    ref.watch(taskSyncCoordinatorProvider);
     final router = createRouter(ref);
     return MaterialApp.router(
       title: 'LifeOS',

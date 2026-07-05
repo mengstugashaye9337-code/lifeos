@@ -1,60 +1,148 @@
-// lib/src/features/tasks/data/task_repository.dart
 import 'package:drift/drift.dart';
 import 'package:lifeos/src/database/app_database.dart';
+import 'package:lifeos/src/features/tasks/data/task_mapper.dart';
+import 'package:lifeos/src/features/tasks/domain/task_model.dart';
 
 // ---------------------------------------------------------------------------
-// Priority enum with DB mapping
+// Abstract contract — swappable local ↔ remote (Phase E)
 // ---------------------------------------------------------------------------
 
-enum TaskPriority { low, medium, high }
-
-extension TaskPriorityExtension on TaskPriority {
-  int toDbValue() => index + 1;
-
-  String get label {
-    switch (this) {
-      case TaskPriority.low:
-        return 'Low';
-      case TaskPriority.medium:
-        return 'Medium';
-      case TaskPriority.high:
-        return 'High';
-    }
-  }
-}
-
-TaskPriority priorityFromDb(int value) {
-  if (value < 1 || value > TaskPriority.values.length) return TaskPriority.low;
-  return TaskPriority.values[value - 1];
+abstract interface class ITaskRepository {
+  Stream<List<TaskModel>> watchTasks();
+  Future<List<TaskModel>> getUnsyncedTasks();
+  Future<int> addTask(TaskModel task);
+  Future<void> updateTask(TaskModel task);
+  Future<void> toggleTask(TaskModel task);
+  Future<void> deleteTask(int id);
 }
 
 // ---------------------------------------------------------------------------
-// Repository
+// Local implementation — Drift + SQLite
 // ---------------------------------------------------------------------------
 
-class TaskRepository {
+class LocalTaskRepository implements ITaskRepository {
   final AppDatabase _db;
 
-  TaskRepository(this._db);
+  LocalTaskRepository(this._db);
 
-  Stream<List<Task>> watchTasks() => _db.select(_db.tasks).watch();
+  @override
+  Stream<List<TaskModel>> watchTasks() {
+    return (_db.select(_db.tasks)..where((t) => t.deletedAt.isNull()))
+        .watch()
+        .map((rows) => rows.map(TaskMapper.fromRow).toList());
+  }
 
-  Future<int> addTask(TasksCompanion task) => _db.into(_db.tasks).insert(task);
+  @override
+  Future<List<TaskModel>> getUnsyncedTasks() async {
+    final rows = await (_db.select(
+      _db.tasks,
+    )..where((t) => t.isSynced.equals(false))).get();
+    return rows.map(TaskMapper.fromRow).toList();
+  }
 
-  /// Fixes Issue #2 safely: Uses the passed 'id' parameter directly for the search filter
-  Future<void> updateTask(int id, TasksCompanion task) =>
-      (_db.update(
-            _db.tasks,
-          )..where((t) => t.id.equals(id))) //  Changed from task.id.value to id
-          .write(task);
-
-  Future<void> toggleTask(Task task) {
-    return updateTask(
-      task.id,
-      TasksCompanion(isCompleted: Value(!task.isCompleted)),
+  @override
+  Future<int> addTask(TaskModel task) {
+    final now = DateTime.now();
+    return _db.into(_db.tasks).insert(
+      TaskMapper.toInsertCompanion(
+        task.copyWith(
+          isSynced: false,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ),
     );
   }
 
-  Future<int> deleteTask(int id) =>
-      (_db.delete(_db.tasks)..where((t) => t.id.equals(id))).go();
+  @override
+  Future<void> updateTask(TaskModel task) {
+    final now = DateTime.now();
+    return (_db.update(_db.tasks)..where((t) => t.id.equals(task.id))).write(
+      TaskMapper.toUpdateCompanion(
+        task.copyWith(isSynced: false, updatedAt: now),
+      ),
+    );
+  }
+
+  @override
+  Future<void> toggleTask(TaskModel task) {
+    return updateTask(task.copyWith(isCompleted: !task.isCompleted));
+  }
+
+  @override
+  Future<void> deleteTask(int id) async {
+    final now = DateTime.now();
+    await (_db.update(_db.tasks)..where((t) => t.id.equals(id))).write(
+      TasksCompanion(
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+        isSynced: const Value(false),
+      ),
+    );
+  }
+
+  // ── Sync helpers (used by Session 3 manual push/pull) ───────────────────
+
+  Future<void> markTaskSynced({
+    required int localId,
+    String? remoteId,
+    required DateTime updatedAt,
+  }) async {
+    await (_db.update(_db.tasks)..where((t) => t.id.equals(localId))).write(
+      TaskMapper.toSyncedCompanion(
+        id: localId,
+        remoteId: remoteId == null
+            ? const Value.absent()
+            : Value(remoteId),
+        updatedAt: updatedAt,
+      ),
+    );
+  }
+
+  Future<void> upsertFromRemote(TaskModel remoteTask) async {
+    if (remoteTask.remoteId == null) return;
+
+    final existingByRemote = await (_db.select(_db.tasks)
+          ..where((t) => t.remoteId.equals(remoteTask.remoteId!))
+          ..limit(1))
+        .getSingleOrNull();
+
+    if (existingByRemote != null &&
+        existingByRemote.updatedAt.isAfter(remoteTask.updatedAt)) {
+      return; // local wins when newer and unsynced changes exist
+    }
+
+    if (existingByRemote == null) {
+      await _db.into(_db.tasks).insert(
+        TasksCompanion.insert(
+          title: remoteTask.title,
+          description: Value(remoteTask.description),
+          dueDate: Value(remoteTask.dueDate),
+          isCompleted: Value(remoteTask.isCompleted),
+          priority: Value(remoteTask.priority.toDbValue()),
+          createdAt: Value(remoteTask.createdAt),
+          isSynced: const Value(true),
+          remoteId: Value(remoteTask.remoteId),
+          updatedAt: Value(remoteTask.updatedAt),
+          deletedAt: Value(remoteTask.deletedAt),
+        ),
+      );
+      return;
+    }
+
+    await (_db.update(_db.tasks)..where((t) => t.id.equals(existingByRemote.id))).write(
+      TasksCompanion(
+        title: Value(remoteTask.title),
+        description: Value(remoteTask.description),
+        dueDate: Value(remoteTask.dueDate),
+        isCompleted: Value(remoteTask.isCompleted),
+        priority: Value(remoteTask.priority.toDbValue()),
+        createdAt: Value(remoteTask.createdAt),
+        isSynced: const Value(true),
+        remoteId: Value(remoteTask.remoteId),
+        updatedAt: Value(remoteTask.updatedAt),
+        deletedAt: Value(remoteTask.deletedAt),
+      ),
+    );
+  }
 }

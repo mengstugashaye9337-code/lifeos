@@ -1,16 +1,13 @@
-// lib/src/features/tasks/presentation/widgets/task_form_sheet.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:drift/drift.dart' show Value; // Senior namespace isolation
-import 'package:lifeos/src/features/tasks/application/task_provider.dart';
+import 'package:lifeos/src/core/utils/utils.dart';
 import 'package:lifeos/src/features/tasks/application/task_ai_bridge.dart';
-import 'package:lifeos/src/features/tasks/data/task_repository.dart';
-import 'package:lifeos/src/database/app_database.dart'; // Exposes TasksCompanion and Task
-import 'package:lifeos/src/core/utils/utils.dart'; // Handles formatFullDate
+import 'package:lifeos/src/features/tasks/application/task_provider.dart';
+import 'package:lifeos/src/features/tasks/domain/task_model.dart';
 
 class TaskFormSheet extends ConsumerStatefulWidget {
-  final Task?
-  existingTask; // If passed, we are in EDIT mode. If null, we are in ADD mode.
+  final TaskModel? existingTask;
+
   const TaskFormSheet({super.key, this.existingTask});
 
   @override
@@ -31,9 +28,7 @@ class _TaskFormSheetState extends ConsumerState<TaskFormSheet> {
     final task = widget.existingTask;
     _titleController = TextEditingController(text: task?.title ?? '');
     _descController = TextEditingController(text: task?.description ?? '');
-    _priority = task != null
-        ? priorityFromDb(task.priority)
-        : TaskPriority.medium;
+    _priority = task?.priority ?? TaskPriority.medium;
     _dueDate = task?.dueDate;
   }
 
@@ -54,42 +49,40 @@ class _TaskFormSheetState extends ConsumerState<TaskFormSheet> {
     if (picked != null) setState(() => _dueDate = picked);
   }
 
-  void _save() {
+  Future<void> _save() async {
     final title = _titleController.text.trim();
     if (title.isEmpty) return;
 
-    final repo = ref.read(taskRepositoryProvider);
+    final description = _descController.text.trim();
+    final notifier = ref.read(tasksStateProvider.notifier);
 
     if (isEditing) {
-      repo.updateTask(
-        widget.existingTask!.id,
-        TasksCompanion(
-          title: Value(title),
-          description: Value(
-            _descController.text.trim().isEmpty
-                ? null
-                : _descController.text.trim(),
-          ),
-          priority: Value(_priority.toDbValue()),
-          dueDate: Value(_dueDate),
+      await notifier.updateTask(
+        widget.existingTask!.copyWith(
+          title: title,
+          description: description.isEmpty ? null : description,
+          priority: _priority,
+          dueDate: _dueDate,
         ),
       );
     } else {
-      repo.addTask(
-        TasksCompanion.insert(
+      final now = DateTime.now();
+      await notifier.addTask(
+        TaskModel(
+          id: 0,
           title: title,
-          description: Value(
-            _descController.text.trim().isEmpty
-                ? null
-                : _descController.text.trim(),
-          ),
-          priority: Value(_priority.toDbValue()),
-          dueDate: Value(_dueDate),
+          description: description.isEmpty ? null : description,
+          dueDate: _dueDate,
+          isCompleted: false,
+          priority: _priority,
+          createdAt: now,
+          updatedAt: now,
+          isSynced: false,
         ),
       );
     }
 
-    Navigator.pop(context);
+    if (mounted) Navigator.pop(context);
   }
 
   @override
@@ -107,7 +100,6 @@ class _TaskFormSheetState extends ConsumerState<TaskFormSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header
           Row(
             children: [
               Text(
@@ -122,8 +114,6 @@ class _TaskFormSheetState extends ConsumerState<TaskFormSheet> {
             ],
           ),
           const SizedBox(height: 12),
-
-          // Title + AI button
           TextField(
             controller: _titleController,
             autofocus: !isEditing,
@@ -169,8 +159,6 @@ class _TaskFormSheetState extends ConsumerState<TaskFormSheet> {
               ),
             ),
           const SizedBox(height: 12),
-
-          // Description
           TextField(
             controller: _descController,
             maxLines: 2,
@@ -180,8 +168,6 @@ class _TaskFormSheetState extends ConsumerState<TaskFormSheet> {
             ),
           ),
           const SizedBox(height: 16),
-
-          // Priority selector
           Text('Priority', style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: 8),
           SegmentedButton<TaskPriority>(
@@ -192,8 +178,6 @@ class _TaskFormSheetState extends ConsumerState<TaskFormSheet> {
             onSelectionChanged: (val) => setState(() => _priority = val.first),
           ),
           const SizedBox(height: 16),
-
-          // Due date
           Row(
             children: [
               OutlinedButton.icon(
@@ -213,8 +197,6 @@ class _TaskFormSheetState extends ConsumerState<TaskFormSheet> {
             ],
           ),
           const SizedBox(height: 20),
-
-          // Save Button
           FilledButton(
             onPressed: _save,
             child: Text(isEditing ? 'Update Task' : 'Add Task'),
