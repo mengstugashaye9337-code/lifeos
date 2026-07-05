@@ -80,4 +80,69 @@ class LocalTaskRepository implements ITaskRepository {
       ),
     );
   }
+
+  // ── Sync helpers (used by Session 3 manual push/pull) ───────────────────
+
+  Future<void> markTaskSynced({
+    required int localId,
+    String? remoteId,
+    required DateTime updatedAt,
+  }) async {
+    await (_db.update(_db.tasks)..where((t) => t.id.equals(localId))).write(
+      TaskMapper.toSyncedCompanion(
+        id: localId,
+        remoteId: remoteId == null
+            ? const Value.absent()
+            : Value(remoteId),
+        updatedAt: updatedAt,
+      ),
+    );
+  }
+
+  Future<void> upsertFromRemote(TaskModel remoteTask) async {
+    if (remoteTask.remoteId == null) return;
+
+    final existingByRemote = await (_db.select(_db.tasks)
+          ..where((t) => t.remoteId.equals(remoteTask.remoteId!))
+          ..limit(1))
+        .getSingleOrNull();
+
+    if (existingByRemote != null &&
+        existingByRemote.updatedAt.isAfter(remoteTask.updatedAt)) {
+      return; // local wins when newer and unsynced changes exist
+    }
+
+    if (existingByRemote == null) {
+      await _db.into(_db.tasks).insert(
+        TasksCompanion.insert(
+          title: remoteTask.title,
+          description: Value(remoteTask.description),
+          dueDate: Value(remoteTask.dueDate),
+          isCompleted: Value(remoteTask.isCompleted),
+          priority: Value(remoteTask.priority.toDbValue()),
+          createdAt: Value(remoteTask.createdAt),
+          isSynced: const Value(true),
+          remoteId: Value(remoteTask.remoteId),
+          updatedAt: Value(remoteTask.updatedAt),
+          deletedAt: Value(remoteTask.deletedAt),
+        ),
+      );
+      return;
+    }
+
+    await (_db.update(_db.tasks)..where((t) => t.id.equals(existingByRemote.id))).write(
+      TasksCompanion(
+        title: Value(remoteTask.title),
+        description: Value(remoteTask.description),
+        dueDate: Value(remoteTask.dueDate),
+        isCompleted: Value(remoteTask.isCompleted),
+        priority: Value(remoteTask.priority.toDbValue()),
+        createdAt: Value(remoteTask.createdAt),
+        isSynced: const Value(true),
+        remoteId: Value(remoteTask.remoteId),
+        updatedAt: Value(remoteTask.updatedAt),
+        deletedAt: Value(remoteTask.deletedAt),
+      ),
+    );
+  }
 }

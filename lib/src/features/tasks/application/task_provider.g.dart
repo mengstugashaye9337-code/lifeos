@@ -51,6 +51,54 @@ final class TaskRepositoryProvider
 
 String _$taskRepositoryHash() => r'4845f304cfab6ea6735595272482ba40b93de6b6';
 
+@ProviderFor(remoteTaskRepository)
+final remoteTaskRepositoryProvider = RemoteTaskRepositoryProvider._();
+
+final class RemoteTaskRepositoryProvider
+    extends
+        $FunctionalProvider<
+          RemoteTaskRepository,
+          RemoteTaskRepository,
+          RemoteTaskRepository
+        >
+    with $Provider<RemoteTaskRepository> {
+  RemoteTaskRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'remoteTaskRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$remoteTaskRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<RemoteTaskRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  RemoteTaskRepository create(Ref ref) {
+    return remoteTaskRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(RemoteTaskRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<RemoteTaskRepository>(value),
+    );
+  }
+}
+
+String _$remoteTaskRepositoryHash() =>
+    r'a5e0f9a380de1f2ef28bf21ccb96388f593a9c50';
+
 @ProviderFor(TasksStateNotifier)
 final tasksStateProvider = TasksStateNotifierProvider._();
 
@@ -84,7 +132,7 @@ final class TasksStateNotifierProvider
 }
 
 String _$tasksStateNotifierHash() =>
-    r'dd01e409763f348132d2075d4f1a14d372a7bc3d';
+    r'700aeb9ed8efa41f040371159606c830639b5ad2';
 
 abstract class _$TasksStateNotifier
     extends $Notifier<AsyncValue<TasksViewState>> {

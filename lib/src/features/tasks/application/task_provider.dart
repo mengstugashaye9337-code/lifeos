@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:lifeos/src/database/database_provider.dart';
+import 'package:lifeos/src/features/tasks/application/task_sync_coordinator.dart';
+import 'package:lifeos/src/features/tasks/data/remote_task_repository.dart';
 import 'package:lifeos/src/features/tasks/data/task_repository.dart';
 import 'package:lifeos/src/features/tasks/domain/task_model.dart';
 import 'package:lifeos/src/services/notification_provider.dart';
+import 'package:lifeos/src/services/supabase_service.dart';
 
 part 'task_provider.g.dart';
 
@@ -15,7 +18,13 @@ part 'task_provider.g.dart';
 @riverpod
 ITaskRepository taskRepository(Ref ref) {
   final db = ref.watch(appDatabaseProvider);
+  // Session 3 keeps tasks local-first; remote sync is orchestrated explicitly.
   return LocalTaskRepository(db);
+}
+
+@riverpod
+RemoteTaskRepository remoteTaskRepository(Ref ref) {
+  return RemoteTaskRepository(SupabaseService.client);
 }
 
 // ---------------------------------------------------------------------------
@@ -82,6 +91,9 @@ class TasksStateNotifier extends _$TasksStateNotifier {
   NotificationNotifier get _notifications =>
       ref.read(notificationProvider.notifier);
 
+  void _requestSyncIfSignedIn() =>
+      ref.read(taskSyncCoordinatorProvider.notifier).requestSync();
+
   void setFilter(TaskFilter newFilter) {
     if (state.hasValue) {
       state = AsyncValue.data(
@@ -99,6 +111,7 @@ class TasksStateNotifier extends _$TasksStateNotifier {
         taskTitle: task.title,
         dueDate: task.dueDate,
       );
+      _requestSyncIfSignedIn();
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }
@@ -117,6 +130,7 @@ class TasksStateNotifier extends _$TasksStateNotifier {
           dueDate: task.dueDate,
         );
       }
+      _requestSyncIfSignedIn();
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }
@@ -135,6 +149,7 @@ class TasksStateNotifier extends _$TasksStateNotifier {
           dueDate: task.dueDate,
         );
       }
+      _requestSyncIfSignedIn();
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }
@@ -144,6 +159,7 @@ class TasksStateNotifier extends _$TasksStateNotifier {
     try {
       await _notifications.cancelTaskReminder(id);
       await _repo.deleteTask(id);
+      _requestSyncIfSignedIn();
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }
