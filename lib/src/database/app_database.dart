@@ -1,4 +1,3 @@
-// lib/src/database/app_database.dart
 import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
@@ -32,6 +31,10 @@ class Notes extends Table {
   TextColumn get content => text()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
+  // ── v5: sync metadata ──
+  TextColumn get remoteId => text().nullable()();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
 }
 
 class Habits extends Table {
@@ -41,11 +44,13 @@ class Habits extends Table {
   IntColumn get streak => integer().withDefault(const Constant(0))();
   BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
-  // ── Added v3 Column for Domain Model Alignment ──
   DateTimeColumn get lastCompletedDate => dateTime().nullable()();
+  // ── v5: sync metadata ──
+  TextColumn get remoteId => text().nullable()();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
 }
 
-// ── Added v3 Table for Completion Log History Tracking ──
 class HabitCompletions extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get habitId =>
@@ -58,17 +63,13 @@ class HabitCompletions extends Table {
 // Database
 // ---------------------------------------------------------------------------
 
-// ✅ Registered the new HabitCompletions table here
 @DriftDatabase(tables: [Tasks, Notes, Habits, HabitCompletions])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
-
-  // Expose a named constructor for tests so tests can pass an in-memory DB.
   AppDatabase.forTesting(super.e);
 
-  // Bumped to 4 — task sync metadata columns
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5; // ← bumped
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -89,9 +90,25 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(tasks, tasks.remoteId);
         await m.addColumn(tasks, tasks.updatedAt);
         await m.addColumn(tasks, tasks.deletedAt);
-        // Backfill updated_at from created_at for existing rows
         await m.database.customStatement(
           'UPDATE tasks SET updated_at = created_at',
+        );
+      }
+      if (from < 5) {
+        // ── Habits sync columns ──
+        await m.addColumn(habits, habits.remoteId as GeneratedColumn<Object>);
+        await m.addColumn(habits, habits.updatedAt as GeneratedColumn<Object>);
+        await m.addColumn(habits, habits.deletedAt as GeneratedColumn<Object>);
+        await m.database.customStatement(
+          'UPDATE habits SET updated_at = created_at',
+        );
+
+        // ── Notes sync columns ──
+        await m.addColumn(notes, notes.remoteId as GeneratedColumn<Object>);
+        await m.addColumn(notes, notes.updatedAt as GeneratedColumn<Object>);
+        await m.addColumn(notes, notes.deletedAt as GeneratedColumn<Object>);
+        await m.database.customStatement(
+          'UPDATE notes SET updated_at = created_at',
         );
       }
     },

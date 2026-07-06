@@ -301,13 +301,15 @@ class _HabitSheetState extends ConsumerState<_HabitSheet> {
         widget.existingHabit!.copyWith(title: title, frequency: _frequency),
       );
     } else {
+      final now = DateTime.now();
       notifier.addHabit(
         HabitModel(
           id: 0, // DB assigns the real id on insert
           title: title,
           frequency: _frequency,
           streak: 0,
-          createdAt: DateTime.now(),
+          createdAt: now,
+          updatedAt: now,
           isSynced: false,
         ),
       );
