@@ -38,10 +38,12 @@ abstract class HabitModel with _$HabitModel {
     required DateTime createdAt,
     required bool isSynced,
     required DateTime updatedAt,
+    DateTime? deletedAt,
   }) = _HabitModel;
 
   // Convenience — is this habit already done for today?
   const HabitModel._();
+  bool get isDeleted => deletedAt != null;
 
   bool get isCompletedToday {
     if (lastCompletedDate == null) return false;

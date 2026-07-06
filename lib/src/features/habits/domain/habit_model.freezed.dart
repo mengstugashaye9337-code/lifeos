@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$HabitModel {
 
- int get id; String? get remoteId; String get title; HabitFrequency get frequency; int get streak; DateTime? get lastCompletedDate; DateTime get createdAt; bool get isSynced; DateTime get updatedAt;
+ int get id; String? get remoteId; String get title; HabitFrequency get frequency; int get streak; DateTime? get lastCompletedDate; DateTime get createdAt; bool get isSynced; DateTime get updatedAt; DateTime? get deletedAt;
 /// Create a copy of HabitModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $HabitModelCopyWith<HabitModel> get copyWith => _$HabitModelCopyWithImpl<HabitMo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is HabitModel&&(identical(other.id, id) || other.id == id)&&(identical(other.remoteId, remoteId) || other.remoteId == remoteId)&&(identical(other.title, title) || other.title == title)&&(identical(other.frequency, frequency) || other.frequency == frequency)&&(identical(other.streak, streak) || other.streak == streak)&&(identical(other.lastCompletedDate, lastCompletedDate) || other.lastCompletedDate == lastCompletedDate)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.isSynced, isSynced) || other.isSynced == isSynced)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HabitModel&&(identical(other.id, id) || other.id == id)&&(identical(other.remoteId, remoteId) || other.remoteId == remoteId)&&(identical(other.title, title) || other.title == title)&&(identical(other.frequency, frequency) || other.frequency == frequency)&&(identical(other.streak, streak) || other.streak == streak)&&(identical(other.lastCompletedDate, lastCompletedDate) || other.lastCompletedDate == lastCompletedDate)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.isSynced, isSynced) || other.isSynced == isSynced)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,remoteId,title,frequency,streak,lastCompletedDate,createdAt,isSynced,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,remoteId,title,frequency,streak,lastCompletedDate,createdAt,isSynced,updatedAt,deletedAt);
 
 @override
 String toString() {
-  return 'HabitModel(id: $id, remoteId: $remoteId, title: $title, frequency: $frequency, streak: $streak, lastCompletedDate: $lastCompletedDate, createdAt: $createdAt, isSynced: $isSynced, updatedAt: $updatedAt)';
+  return 'HabitModel(id: $id, remoteId: $remoteId, title: $title, frequency: $frequency, streak: $streak, lastCompletedDate: $lastCompletedDate, createdAt: $createdAt, isSynced: $isSynced, updatedAt: $updatedAt, deletedAt: $deletedAt)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $HabitModelCopyWith<$Res>  {
   factory $HabitModelCopyWith(HabitModel value, $Res Function(HabitModel) _then) = _$HabitModelCopyWithImpl;
 @useResult
 $Res call({
- int id, String? remoteId, String title, HabitFrequency frequency, int streak, DateTime? lastCompletedDate, DateTime createdAt, bool isSynced, DateTime updatedAt
+ int id, String? remoteId, String title, HabitFrequency frequency, int streak, DateTime? lastCompletedDate, DateTime createdAt, bool isSynced, DateTime updatedAt, DateTime? deletedAt
 });
 
 
@@ -62,7 +62,7 @@ class _$HabitModelCopyWithImpl<$Res>
 
 /// Create a copy of HabitModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? remoteId = freezed,Object? title = null,Object? frequency = null,Object? streak = null,Object? lastCompletedDate = freezed,Object? createdAt = null,Object? isSynced = null,Object? updatedAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? remoteId = freezed,Object? title = null,Object? frequency = null,Object? streak = null,Object? lastCompletedDate = freezed,Object? createdAt = null,Object? isSynced = null,Object? updatedAt = null,Object? deletedAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,remoteId: freezed == remoteId ? _self.remoteId : remoteId // ignore: cast_nullable_to_non_nullable
@@ -73,7 +73,8 @@ as int,lastCompletedDate: freezed == lastCompletedDate ? _self.lastCompletedDate
 as DateTime?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,isSynced: null == isSynced ? _self.isSynced : isSynced // ignore: cast_nullable_to_non_nullable
 as bool,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 
@@ -158,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String? remoteId,  String title,  HabitFrequency frequency,  int streak,  DateTime? lastCompletedDate,  DateTime createdAt,  bool isSynced,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String? remoteId,  String title,  HabitFrequency frequency,  int streak,  DateTime? lastCompletedDate,  DateTime createdAt,  bool isSynced,  DateTime updatedAt,  DateTime? deletedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _HabitModel() when $default != null:
-return $default(_that.id,_that.remoteId,_that.title,_that.frequency,_that.streak,_that.lastCompletedDate,_that.createdAt,_that.isSynced,_that.updatedAt);case _:
+return $default(_that.id,_that.remoteId,_that.title,_that.frequency,_that.streak,_that.lastCompletedDate,_that.createdAt,_that.isSynced,_that.updatedAt,_that.deletedAt);case _:
   return orElse();
 
 }
@@ -179,10 +180,10 @@ return $default(_that.id,_that.remoteId,_that.title,_that.frequency,_that.streak
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String? remoteId,  String title,  HabitFrequency frequency,  int streak,  DateTime? lastCompletedDate,  DateTime createdAt,  bool isSynced,  DateTime updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String? remoteId,  String title,  HabitFrequency frequency,  int streak,  DateTime? lastCompletedDate,  DateTime createdAt,  bool isSynced,  DateTime updatedAt,  DateTime? deletedAt)  $default,) {final _that = this;
 switch (_that) {
 case _HabitModel():
-return $default(_that.id,_that.remoteId,_that.title,_that.frequency,_that.streak,_that.lastCompletedDate,_that.createdAt,_that.isSynced,_that.updatedAt);case _:
+return $default(_that.id,_that.remoteId,_that.title,_that.frequency,_that.streak,_that.lastCompletedDate,_that.createdAt,_that.isSynced,_that.updatedAt,_that.deletedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -199,10 +200,10 @@ return $default(_that.id,_that.remoteId,_that.title,_that.frequency,_that.streak
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String? remoteId,  String title,  HabitFrequency frequency,  int streak,  DateTime? lastCompletedDate,  DateTime createdAt,  bool isSynced,  DateTime updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String? remoteId,  String title,  HabitFrequency frequency,  int streak,  DateTime? lastCompletedDate,  DateTime createdAt,  bool isSynced,  DateTime updatedAt,  DateTime? deletedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _HabitModel() when $default != null:
-return $default(_that.id,_that.remoteId,_that.title,_that.frequency,_that.streak,_that.lastCompletedDate,_that.createdAt,_that.isSynced,_that.updatedAt);case _:
+return $default(_that.id,_that.remoteId,_that.title,_that.frequency,_that.streak,_that.lastCompletedDate,_that.createdAt,_that.isSynced,_that.updatedAt,_that.deletedAt);case _:
   return null;
 
 }
@@ -214,7 +215,7 @@ return $default(_that.id,_that.remoteId,_that.title,_that.frequency,_that.streak
 
 
 class _HabitModel extends HabitModel {
-  const _HabitModel({required this.id, this.remoteId, required this.title, required this.frequency, required this.streak, this.lastCompletedDate, required this.createdAt, required this.isSynced, required this.updatedAt}): super._();
+  const _HabitModel({required this.id, this.remoteId, required this.title, required this.frequency, required this.streak, this.lastCompletedDate, required this.createdAt, required this.isSynced, required this.updatedAt, this.deletedAt}): super._();
   
 
 @override final  int id;
@@ -226,6 +227,7 @@ class _HabitModel extends HabitModel {
 @override final  DateTime createdAt;
 @override final  bool isSynced;
 @override final  DateTime updatedAt;
+@override final  DateTime? deletedAt;
 
 /// Create a copy of HabitModel
 /// with the given fields replaced by the non-null parameter values.
@@ -237,16 +239,16 @@ _$HabitModelCopyWith<_HabitModel> get copyWith => __$HabitModelCopyWithImpl<_Hab
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HabitModel&&(identical(other.id, id) || other.id == id)&&(identical(other.remoteId, remoteId) || other.remoteId == remoteId)&&(identical(other.title, title) || other.title == title)&&(identical(other.frequency, frequency) || other.frequency == frequency)&&(identical(other.streak, streak) || other.streak == streak)&&(identical(other.lastCompletedDate, lastCompletedDate) || other.lastCompletedDate == lastCompletedDate)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.isSynced, isSynced) || other.isSynced == isSynced)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _HabitModel&&(identical(other.id, id) || other.id == id)&&(identical(other.remoteId, remoteId) || other.remoteId == remoteId)&&(identical(other.title, title) || other.title == title)&&(identical(other.frequency, frequency) || other.frequency == frequency)&&(identical(other.streak, streak) || other.streak == streak)&&(identical(other.lastCompletedDate, lastCompletedDate) || other.lastCompletedDate == lastCompletedDate)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.isSynced, isSynced) || other.isSynced == isSynced)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,remoteId,title,frequency,streak,lastCompletedDate,createdAt,isSynced,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,remoteId,title,frequency,streak,lastCompletedDate,createdAt,isSynced,updatedAt,deletedAt);
 
 @override
 String toString() {
-  return 'HabitModel(id: $id, remoteId: $remoteId, title: $title, frequency: $frequency, streak: $streak, lastCompletedDate: $lastCompletedDate, createdAt: $createdAt, isSynced: $isSynced, updatedAt: $updatedAt)';
+  return 'HabitModel(id: $id, remoteId: $remoteId, title: $title, frequency: $frequency, streak: $streak, lastCompletedDate: $lastCompletedDate, createdAt: $createdAt, isSynced: $isSynced, updatedAt: $updatedAt, deletedAt: $deletedAt)';
 }
 
 
@@ -257,7 +259,7 @@ abstract mixin class _$HabitModelCopyWith<$Res> implements $HabitModelCopyWith<$
   factory _$HabitModelCopyWith(_HabitModel value, $Res Function(_HabitModel) _then) = __$HabitModelCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String? remoteId, String title, HabitFrequency frequency, int streak, DateTime? lastCompletedDate, DateTime createdAt, bool isSynced, DateTime updatedAt
+ int id, String? remoteId, String title, HabitFrequency frequency, int streak, DateTime? lastCompletedDate, DateTime createdAt, bool isSynced, DateTime updatedAt, DateTime? deletedAt
 });
 
 
@@ -274,7 +276,7 @@ class __$HabitModelCopyWithImpl<$Res>
 
 /// Create a copy of HabitModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? remoteId = freezed,Object? title = null,Object? frequency = null,Object? streak = null,Object? lastCompletedDate = freezed,Object? createdAt = null,Object? isSynced = null,Object? updatedAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? remoteId = freezed,Object? title = null,Object? frequency = null,Object? streak = null,Object? lastCompletedDate = freezed,Object? createdAt = null,Object? isSynced = null,Object? updatedAt = null,Object? deletedAt = freezed,}) {
   return _then(_HabitModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,remoteId: freezed == remoteId ? _self.remoteId : remoteId // ignore: cast_nullable_to_non_nullable
@@ -285,7 +287,8 @@ as int,lastCompletedDate: freezed == lastCompletedDate ? _self.lastCompletedDate
 as DateTime?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,isSynced: null == isSynced ? _self.isSynced : isSynced // ignore: cast_nullable_to_non_nullable
 as bool,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 

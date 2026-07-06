@@ -729,6 +729,40 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, Note> {
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
+    'remoteId',
+  );
+  @override
+  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
+    'remote_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -736,6 +770,9 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, Note> {
     content,
     createdAt,
     isSynced,
+    remoteId,
+    updatedAt,
+    deletedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -780,6 +817,24 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, Note> {
         isSynced.isAcceptableOrUnknown(data['is_synced']!, _isSyncedMeta),
       );
     }
+    if (data.containsKey('remote_id')) {
+      context.handle(
+        _remoteIdMeta,
+        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -809,6 +864,18 @@ class $NotesTable extends Notes with TableInfo<$NotesTable, Note> {
         DriftSqlType.bool,
         data['${effectivePrefix}is_synced'],
       )!,
+      remoteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remote_id'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
     );
   }
 
@@ -824,12 +891,18 @@ class Note extends DataClass implements Insertable<Note> {
   final String content;
   final DateTime createdAt;
   final bool isSynced;
+  final String? remoteId;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
   const Note({
     required this.id,
     required this.title,
     required this.content,
     required this.createdAt,
     required this.isSynced,
+    this.remoteId,
+    required this.updatedAt,
+    this.deletedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -839,6 +912,13 @@ class Note extends DataClass implements Insertable<Note> {
     map['content'] = Variable<String>(content);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['is_synced'] = Variable<bool>(isSynced);
+    if (!nullToAbsent || remoteId != null) {
+      map['remote_id'] = Variable<String>(remoteId);
+    }
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
     return map;
   }
 
@@ -849,6 +929,13 @@ class Note extends DataClass implements Insertable<Note> {
       content: Value(content),
       createdAt: Value(createdAt),
       isSynced: Value(isSynced),
+      remoteId: remoteId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remoteId),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
     );
   }
 
@@ -863,6 +950,9 @@ class Note extends DataClass implements Insertable<Note> {
       content: serializer.fromJson<String>(json['content']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       isSynced: serializer.fromJson<bool>(json['isSynced']),
+      remoteId: serializer.fromJson<String?>(json['remoteId']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
   }
   @override
@@ -874,6 +964,9 @@ class Note extends DataClass implements Insertable<Note> {
       'content': serializer.toJson<String>(content),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'isSynced': serializer.toJson<bool>(isSynced),
+      'remoteId': serializer.toJson<String?>(remoteId),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
   }
 
@@ -883,12 +976,18 @@ class Note extends DataClass implements Insertable<Note> {
     String? content,
     DateTime? createdAt,
     bool? isSynced,
+    Value<String?> remoteId = const Value.absent(),
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
   }) => Note(
     id: id ?? this.id,
     title: title ?? this.title,
     content: content ?? this.content,
     createdAt: createdAt ?? this.createdAt,
     isSynced: isSynced ?? this.isSynced,
+    remoteId: remoteId.present ? remoteId.value : this.remoteId,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   Note copyWithCompanion(NotesCompanion data) {
     return Note(
@@ -897,6 +996,9 @@ class Note extends DataClass implements Insertable<Note> {
       content: data.content.present ? data.content.value : this.content,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       isSynced: data.isSynced.present ? data.isSynced.value : this.isSynced,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
 
@@ -907,13 +1009,25 @@ class Note extends DataClass implements Insertable<Note> {
           ..write('title: $title, ')
           ..write('content: $content, ')
           ..write('createdAt: $createdAt, ')
-          ..write('isSynced: $isSynced')
+          ..write('isSynced: $isSynced, ')
+          ..write('remoteId: $remoteId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, title, content, createdAt, isSynced);
+  int get hashCode => Object.hash(
+    id,
+    title,
+    content,
+    createdAt,
+    isSynced,
+    remoteId,
+    updatedAt,
+    deletedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -922,7 +1036,10 @@ class Note extends DataClass implements Insertable<Note> {
           other.title == this.title &&
           other.content == this.content &&
           other.createdAt == this.createdAt &&
-          other.isSynced == this.isSynced);
+          other.isSynced == this.isSynced &&
+          other.remoteId == this.remoteId &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
 }
 
 class NotesCompanion extends UpdateCompanion<Note> {
@@ -931,12 +1048,18 @@ class NotesCompanion extends UpdateCompanion<Note> {
   final Value<String> content;
   final Value<DateTime> createdAt;
   final Value<bool> isSynced;
+  final Value<String?> remoteId;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
   const NotesCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
     this.content = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.isSynced = const Value.absent(),
+    this.remoteId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
   });
   NotesCompanion.insert({
     this.id = const Value.absent(),
@@ -944,6 +1067,9 @@ class NotesCompanion extends UpdateCompanion<Note> {
     required String content,
     this.createdAt = const Value.absent(),
     this.isSynced = const Value.absent(),
+    this.remoteId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
   }) : title = Value(title),
        content = Value(content);
   static Insertable<Note> custom({
@@ -952,6 +1078,9 @@ class NotesCompanion extends UpdateCompanion<Note> {
     Expression<String>? content,
     Expression<DateTime>? createdAt,
     Expression<bool>? isSynced,
+    Expression<String>? remoteId,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -959,6 +1088,9 @@ class NotesCompanion extends UpdateCompanion<Note> {
       if (content != null) 'content': content,
       if (createdAt != null) 'created_at': createdAt,
       if (isSynced != null) 'is_synced': isSynced,
+      if (remoteId != null) 'remote_id': remoteId,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
     });
   }
 
@@ -968,6 +1100,9 @@ class NotesCompanion extends UpdateCompanion<Note> {
     Value<String>? content,
     Value<DateTime>? createdAt,
     Value<bool>? isSynced,
+    Value<String?>? remoteId,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
   }) {
     return NotesCompanion(
       id: id ?? this.id,
@@ -975,6 +1110,9 @@ class NotesCompanion extends UpdateCompanion<Note> {
       content: content ?? this.content,
       createdAt: createdAt ?? this.createdAt,
       isSynced: isSynced ?? this.isSynced,
+      remoteId: remoteId ?? this.remoteId,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
     );
   }
 
@@ -996,6 +1134,15 @@ class NotesCompanion extends UpdateCompanion<Note> {
     if (isSynced.present) {
       map['is_synced'] = Variable<bool>(isSynced.value);
     }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<String>(remoteId.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
     return map;
   }
 
@@ -1006,7 +1153,10 @@ class NotesCompanion extends UpdateCompanion<Note> {
           ..write('title: $title, ')
           ..write('content: $content, ')
           ..write('createdAt: $createdAt, ')
-          ..write('isSynced: $isSynced')
+          ..write('isSynced: $isSynced, ')
+          ..write('remoteId: $remoteId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
@@ -1103,6 +1253,40 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, Habit> {
         type: DriftSqlType.dateTime,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
+    'remoteId',
+  );
+  @override
+  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
+    'remote_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1112,6 +1296,9 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, Habit> {
     isSynced,
     createdAt,
     lastCompletedDate,
+    remoteId,
+    updatedAt,
+    deletedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1171,6 +1358,24 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, Habit> {
         ),
       );
     }
+    if (data.containsKey('remote_id')) {
+      context.handle(
+        _remoteIdMeta,
+        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -1208,6 +1413,18 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, Habit> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}last_completed_date'],
       ),
+      remoteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remote_id'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
     );
   }
 
@@ -1225,6 +1442,9 @@ class Habit extends DataClass implements Insertable<Habit> {
   final bool isSynced;
   final DateTime createdAt;
   final DateTime? lastCompletedDate;
+  final String? remoteId;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
   const Habit({
     required this.id,
     required this.title,
@@ -1233,6 +1453,9 @@ class Habit extends DataClass implements Insertable<Habit> {
     required this.isSynced,
     required this.createdAt,
     this.lastCompletedDate,
+    this.remoteId,
+    required this.updatedAt,
+    this.deletedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1245,6 +1468,13 @@ class Habit extends DataClass implements Insertable<Habit> {
     map['created_at'] = Variable<DateTime>(createdAt);
     if (!nullToAbsent || lastCompletedDate != null) {
       map['last_completed_date'] = Variable<DateTime>(lastCompletedDate);
+    }
+    if (!nullToAbsent || remoteId != null) {
+      map['remote_id'] = Variable<String>(remoteId);
+    }
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
     }
     return map;
   }
@@ -1260,6 +1490,13 @@ class Habit extends DataClass implements Insertable<Habit> {
       lastCompletedDate: lastCompletedDate == null && nullToAbsent
           ? const Value.absent()
           : Value(lastCompletedDate),
+      remoteId: remoteId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remoteId),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
     );
   }
 
@@ -1278,6 +1515,9 @@ class Habit extends DataClass implements Insertable<Habit> {
       lastCompletedDate: serializer.fromJson<DateTime?>(
         json['lastCompletedDate'],
       ),
+      remoteId: serializer.fromJson<String?>(json['remoteId']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
   }
   @override
@@ -1291,6 +1531,9 @@ class Habit extends DataClass implements Insertable<Habit> {
       'isSynced': serializer.toJson<bool>(isSynced),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'lastCompletedDate': serializer.toJson<DateTime?>(lastCompletedDate),
+      'remoteId': serializer.toJson<String?>(remoteId),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
   }
 
@@ -1302,6 +1545,9 @@ class Habit extends DataClass implements Insertable<Habit> {
     bool? isSynced,
     DateTime? createdAt,
     Value<DateTime?> lastCompletedDate = const Value.absent(),
+    Value<String?> remoteId = const Value.absent(),
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
   }) => Habit(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -1312,6 +1558,9 @@ class Habit extends DataClass implements Insertable<Habit> {
     lastCompletedDate: lastCompletedDate.present
         ? lastCompletedDate.value
         : this.lastCompletedDate,
+    remoteId: remoteId.present ? remoteId.value : this.remoteId,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   Habit copyWithCompanion(HabitsCompanion data) {
     return Habit(
@@ -1324,6 +1573,9 @@ class Habit extends DataClass implements Insertable<Habit> {
       lastCompletedDate: data.lastCompletedDate.present
           ? data.lastCompletedDate.value
           : this.lastCompletedDate,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
 
@@ -1336,7 +1588,10 @@ class Habit extends DataClass implements Insertable<Habit> {
           ..write('streak: $streak, ')
           ..write('isSynced: $isSynced, ')
           ..write('createdAt: $createdAt, ')
-          ..write('lastCompletedDate: $lastCompletedDate')
+          ..write('lastCompletedDate: $lastCompletedDate, ')
+          ..write('remoteId: $remoteId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
@@ -1350,6 +1605,9 @@ class Habit extends DataClass implements Insertable<Habit> {
     isSynced,
     createdAt,
     lastCompletedDate,
+    remoteId,
+    updatedAt,
+    deletedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -1361,7 +1619,10 @@ class Habit extends DataClass implements Insertable<Habit> {
           other.streak == this.streak &&
           other.isSynced == this.isSynced &&
           other.createdAt == this.createdAt &&
-          other.lastCompletedDate == this.lastCompletedDate);
+          other.lastCompletedDate == this.lastCompletedDate &&
+          other.remoteId == this.remoteId &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
 }
 
 class HabitsCompanion extends UpdateCompanion<Habit> {
@@ -1372,6 +1633,9 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
   final Value<bool> isSynced;
   final Value<DateTime> createdAt;
   final Value<DateTime?> lastCompletedDate;
+  final Value<String?> remoteId;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
   const HabitsCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
@@ -1380,6 +1644,9 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
     this.isSynced = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.lastCompletedDate = const Value.absent(),
+    this.remoteId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
   });
   HabitsCompanion.insert({
     this.id = const Value.absent(),
@@ -1389,6 +1656,9 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
     this.isSynced = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.lastCompletedDate = const Value.absent(),
+    this.remoteId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
   }) : title = Value(title),
        frequency = Value(frequency);
   static Insertable<Habit> custom({
@@ -1399,6 +1669,9 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
     Expression<bool>? isSynced,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? lastCompletedDate,
+    Expression<String>? remoteId,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1408,6 +1681,9 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
       if (isSynced != null) 'is_synced': isSynced,
       if (createdAt != null) 'created_at': createdAt,
       if (lastCompletedDate != null) 'last_completed_date': lastCompletedDate,
+      if (remoteId != null) 'remote_id': remoteId,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
     });
   }
 
@@ -1419,6 +1695,9 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
     Value<bool>? isSynced,
     Value<DateTime>? createdAt,
     Value<DateTime?>? lastCompletedDate,
+    Value<String?>? remoteId,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
   }) {
     return HabitsCompanion(
       id: id ?? this.id,
@@ -1428,6 +1707,9 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
       isSynced: isSynced ?? this.isSynced,
       createdAt: createdAt ?? this.createdAt,
       lastCompletedDate: lastCompletedDate ?? this.lastCompletedDate,
+      remoteId: remoteId ?? this.remoteId,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
     );
   }
 
@@ -1455,6 +1737,15 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
     if (lastCompletedDate.present) {
       map['last_completed_date'] = Variable<DateTime>(lastCompletedDate.value);
     }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<String>(remoteId.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
     return map;
   }
 
@@ -1467,7 +1758,10 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
           ..write('streak: $streak, ')
           ..write('isSynced: $isSynced, ')
           ..write('createdAt: $createdAt, ')
-          ..write('lastCompletedDate: $lastCompletedDate')
+          ..write('lastCompletedDate: $lastCompletedDate, ')
+          ..write('remoteId: $remoteId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
@@ -2073,6 +2367,9 @@ typedef $$NotesTableCreateCompanionBuilder =
       required String content,
       Value<DateTime> createdAt,
       Value<bool> isSynced,
+      Value<String?> remoteId,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
     });
 typedef $$NotesTableUpdateCompanionBuilder =
     NotesCompanion Function({
@@ -2081,6 +2378,9 @@ typedef $$NotesTableUpdateCompanionBuilder =
       Value<String> content,
       Value<DateTime> createdAt,
       Value<bool> isSynced,
+      Value<String?> remoteId,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
     });
 
 class $$NotesTableFilterComposer extends Composer<_$AppDatabase, $NotesTable> {
@@ -2113,6 +2413,21 @@ class $$NotesTableFilterComposer extends Composer<_$AppDatabase, $NotesTable> {
 
   ColumnFilters<bool> get isSynced => $composableBuilder(
     column: $table.isSynced,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2150,6 +2465,21 @@ class $$NotesTableOrderingComposer
     column: $table.isSynced,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$NotesTableAnnotationComposer
@@ -2175,6 +2505,15 @@ class $$NotesTableAnnotationComposer
 
   GeneratedColumn<bool> get isSynced =>
       $composableBuilder(column: $table.isSynced, builder: (column) => column);
+
+  GeneratedColumn<String> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
 
 class $$NotesTableTableManager
@@ -2210,12 +2549,18 @@ class $$NotesTableTableManager
                 Value<String> content = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
+                Value<String?> remoteId = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
               }) => NotesCompanion(
                 id: id,
                 title: title,
                 content: content,
                 createdAt: createdAt,
                 isSynced: isSynced,
+                remoteId: remoteId,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
               ),
           createCompanionCallback:
               ({
@@ -2224,12 +2569,18 @@ class $$NotesTableTableManager
                 required String content,
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
+                Value<String?> remoteId = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
               }) => NotesCompanion.insert(
                 id: id,
                 title: title,
                 content: content,
                 createdAt: createdAt,
                 isSynced: isSynced,
+                remoteId: remoteId,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -2262,6 +2613,9 @@ typedef $$HabitsTableCreateCompanionBuilder =
       Value<bool> isSynced,
       Value<DateTime> createdAt,
       Value<DateTime?> lastCompletedDate,
+      Value<String?> remoteId,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
     });
 typedef $$HabitsTableUpdateCompanionBuilder =
     HabitsCompanion Function({
@@ -2272,6 +2626,9 @@ typedef $$HabitsTableUpdateCompanionBuilder =
       Value<bool> isSynced,
       Value<DateTime> createdAt,
       Value<DateTime?> lastCompletedDate,
+      Value<String?> remoteId,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
     });
 
 final class $$HabitsTableReferences
@@ -2340,6 +2697,21 @@ class $$HabitsTableFilterComposer
 
   ColumnFilters<DateTime> get lastCompletedDate => $composableBuilder(
     column: $table.lastCompletedDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2412,6 +2784,21 @@ class $$HabitsTableOrderingComposer
     column: $table.lastCompletedDate,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$HabitsTableAnnotationComposer
@@ -2445,6 +2832,15 @@ class $$HabitsTableAnnotationComposer
     column: $table.lastCompletedDate,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 
   Expression<T> habitCompletionsRefs<T extends Object>(
     Expression<T> Function($$HabitCompletionsTableAnnotationComposer a) f,
@@ -2507,6 +2903,9 @@ class $$HabitsTableTableManager
                 Value<bool> isSynced = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime?> lastCompletedDate = const Value.absent(),
+                Value<String?> remoteId = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
               }) => HabitsCompanion(
                 id: id,
                 title: title,
@@ -2515,6 +2914,9 @@ class $$HabitsTableTableManager
                 isSynced: isSynced,
                 createdAt: createdAt,
                 lastCompletedDate: lastCompletedDate,
+                remoteId: remoteId,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
               ),
           createCompanionCallback:
               ({
@@ -2525,6 +2927,9 @@ class $$HabitsTableTableManager
                 Value<bool> isSynced = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime?> lastCompletedDate = const Value.absent(),
+                Value<String?> remoteId = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
               }) => HabitsCompanion.insert(
                 id: id,
                 title: title,
@@ -2533,6 +2938,9 @@ class $$HabitsTableTableManager
                 isSynced: isSynced,
                 createdAt: createdAt,
                 lastCompletedDate: lastCompletedDate,
+                remoteId: remoteId,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map(

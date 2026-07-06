@@ -9,11 +9,18 @@ import 'package:lifeos/src/features/habits/domain/habit_model.dart';
 
 abstract interface class IHabitRepository {
   Stream<List<HabitModel>> watchHabits();
+  Future<List<HabitModel>> getUnsyncedHabits();
   Future<int> addHabit(HabitModel habit);
   Future<void> updateHabit(HabitModel habit);
   Future<void> deleteHabit(int id);
   Future<void> markComplete(HabitModel habit);
   Future<void> unmarkComplete(HabitModel habit);
+  Future<void> markHabitSynced({
+    required int localId,
+    String? remoteId,
+    required DateTime updatedAt,
+  });
+  Future<void> upsertFromRemote(HabitModel remoteHabit);
 }
 
 // ---------------------------------------------------------------------------
@@ -30,27 +37,121 @@ class HabitRepository implements IHabitRepository {
   @override
   Stream<List<HabitModel>> watchHabits() {
     return (_db.select(_db.habits)
+          ..where((h) => h.deletedAt.isNull())
           ..orderBy([(h) => OrderingTerm(expression: h.createdAt)]))
         .watch()
         .map((rows) => rows.map(HabitMapper.fromRow).toList());
   }
 
+  @override
+  Future<List<HabitModel>> getUnsyncedHabits() async {
+    final rows = await (_db.select(
+      _db.habits,
+    )..where((h) => h.isSynced.equals(false))).get();
+    return rows.map(HabitMapper.fromRow).toList();
+  }
+
   // ── Write ────────────────────────────────────────────────────────────────
 
   @override
-  Future<int> addHabit(HabitModel habit) =>
-      _db.into(_db.habits).insert(HabitMapper.toInsertCompanion(habit));
+  Future<int> addHabit(HabitModel habit) {
+    final now = DateTime.now();
+    return _db
+        .into(_db.habits)
+        .insert(
+          HabitMapper.toInsertCompanion(
+            habit.copyWith(isSynced: false, createdAt: now, updatedAt: now),
+          ),
+        );
+  }
 
   @override
-  Future<void> updateHabit(HabitModel habit) =>
-      (_db.update(_db.habits)..where((h) => h.id.equals(habit.id))).write(
-        HabitMapper.toUpdateCompanion(habit),
-      );
+  Future<void> updateHabit(HabitModel habit) {
+    final now = DateTime.now();
+    return (_db.update(_db.habits)..where((h) => h.id.equals(habit.id))).write(
+      HabitMapper.toUpdateCompanion(
+        habit.copyWith(isSynced: false, updatedAt: now),
+      ),
+    );
+  }
 
   @override
-  Future<void> deleteHabit(int id) =>
-      (_db.delete(_db.habits)..where((h) => h.id.equals(id))).go();
-  // cascade on FK handles HabitCompletions automatically
+  Future<void> deleteHabit(int id) async {
+    final now = DateTime.now();
+    await (_db.update(_db.habits)..where((h) => h.id.equals(id))).write(
+      HabitsCompanion(
+        deletedAt: Value(now),
+        updatedAt: Value(now),
+        isSynced: const Value(false),
+      ),
+    );
+  }
+
+  @override
+  Future<void> markHabitSynced({
+    required int localId,
+    String? remoteId,
+    required DateTime updatedAt,
+  }) async {
+    await (_db.update(_db.habits)..where((h) => h.id.equals(localId))).write(
+      HabitMapper.toSyncedCompanion(
+        localId: localId,
+        remoteId: remoteId == null ? const Value.absent() : Value(remoteId),
+        updatedAt: updatedAt,
+      ),
+    );
+  }
+
+  @override
+  Future<void> upsertFromRemote(HabitModel remoteHabit) async {
+    if (remoteHabit.remoteId == null) return;
+
+    final existingByRemote =
+        await (_db.select(_db.habits)
+              ..where((h) => h.remoteId.equals(remoteHabit.remoteId!))
+              ..limit(1))
+            .getSingleOrNull();
+
+    if (existingByRemote != null &&
+        existingByRemote.updatedAt.isAfter(remoteHabit.updatedAt)) {
+      return;
+    }
+
+    if (existingByRemote == null) {
+      await _db
+          .into(_db.habits)
+          .insert(
+            HabitsCompanion.insert(
+              title: remoteHabit.title,
+              frequency: remoteHabit.frequency.toDbValue(),
+              streak: Value(remoteHabit.streak),
+              createdAt: Value(remoteHabit.createdAt),
+              lastCompletedDate: Value(remoteHabit.lastCompletedDate),
+              isSynced: const Value(true),
+              remoteId: Value(remoteHabit.remoteId),
+              updatedAt: Value(remoteHabit.updatedAt),
+              deletedAt: Value(remoteHabit.deletedAt),
+            ),
+          );
+      return;
+    }
+
+    await (_db.update(
+      _db.habits,
+    )..where((h) => h.id.equals(existingByRemote.id))).write(
+      HabitsCompanion(
+        title: Value(remoteHabit.title),
+        frequency: Value(remoteHabit.frequency.toDbValue()),
+        streak: Value(remoteHabit.streak),
+        createdAt: Value(remoteHabit.createdAt),
+        lastCompletedDate: Value(remoteHabit.lastCompletedDate),
+        isSynced: const Value(true),
+        remoteId: Value(remoteHabit.remoteId),
+        updatedAt: Value(remoteHabit.updatedAt),
+        deletedAt: Value(remoteHabit.deletedAt),
+      ),
+    );
+  }
 
   // ── Completion logic ─────────────────────────────────────────────────────
 
